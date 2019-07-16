@@ -8,13 +8,10 @@ const Index = `
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
           integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/6.1.0/jsoneditor.min.css">
     <script src="https://kit.fontawesome.com/43cf7afab1.js"></script>
     <title>Hypersomnia</title>
     <style>
-        textarea.form-control {
-            height: 100%;
-        }
-
         div.active {
             background-color: #444444;
             color: #ffffff;
@@ -22,6 +19,22 @@ const Index = `
             -moz-border-radius: 3px;
             border-radius: 3px;
         }
+
+		.jsoneditor {
+			line-height: auto;
+		}
+
+		.jsoneditor-schema-error, div.jsoneditor td, div.jsoneditor textarea, div.jsoneditor th, div.jsoneditor-field, div.jsoneditor-value {
+			font-size: 10px;
+		}
+
+		.ace-jsoneditor.ace_editor {
+			font-size: 10px!important;
+		}
+
+		#request-editor, #response-editor {
+			height: 100%;
+		}
     </style>
 </head>
 <body>
@@ -66,16 +79,14 @@ const Index = `
                 <button class="btn btn-sm btn-primary js-send float-right">Send</button>
                 <button class="btn btn-sm btn-secondary js-reset float-right mr-2">Reset</button>
             </div>
-
-                <textarea class="form-control js-request text-monospace" style="font-size:70%;"></textarea>
-
+			<div id="request-editor"></div>
         </div>
-        <div class="col-sm" style="overflow-x: scroll;overflow-y: scroll;">
-            <div>
-                <span class="badge badge-secondary js-response-took">...</span>
-                <span class="badge badge-secondary js-response-time">...</span>
+        <div class="col-sm">
+            <div class="mb-2 mt-3 clearfix">
+				<span class="badge badge-secondary js-response-time float-right">...</span>                
+				<span class="badge badge-secondary js-response-took float-right mr-2">...</span>
             </div>
-            <div class="js-response text-monospace" style="font-size:70%;white-space: pre-wrap;"></div>
+			<div id="response-editor"></div>
         </div>
     </div>
 
@@ -92,152 +103,234 @@ const Index = `
         integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
         crossorigin="anonymous"></script>
 <script src="https://momentjs.com/downloads/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/6.1.0/jsoneditor.min.js"></script>
+<script src="https://unpkg.com/dexie@latest/dist/dexie.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsonpath@1.0.2/jsonpath.min.js"></script>
 <script>
-    $(function () {
-        let storage = window.localStorage;
+let storage = window.localStorage;
 
-        $(document).on('click', '.js-endpoint-toggle', function () {
-            let service = $(this).data('service');
-            storage.setItem('active-service', service);
+let db = new Dexie("hypersomnia");
+db.version(1).stores({
+    requests: 'endpoint,body',
+    responses: 'endpoint,time,receivedAt,body'
+});
 
-            let endpoint = $(this).data('endpoint');
-            storage.setItem('active-endpoint', endpoint);
-            $('.js-active-endpoint').text(endpoint);
-            $('.js-endpoint-toggle').removeClass('active');
-            $(this).addClass('active');
+$(function () {
+    let requestEditor = new JSONEditor(document.getElementById("request-editor"), {
+        enableSort: false,
+        enableTransform: false,
+		mode: 'code',
+    });
+    let responseEditor = new JSONEditor(document.getElementById("response-editor"), {
+        mode: 'code',
+    });
 
-            let requestTemplate = storage.getItem(endpoint + ':request');
-            if (requestTemplate === null) {
-                requestTemplate = $(this).find('.js-endpoint-request-template').text();
-            }
+	function setRequestBody(body) {
+		
+	}
 
-            $('.js-response').text('');
-            if (cachedResponse = storage.getItem(endpoint + ':response')) {
-                $('.js-response').text(cachedResponse);
-            }
-            $('.js-response-took').text('...');
-            if (cachedResponseTook = storage.getItem(endpoint+':responseTook')) {
-                $('.js-response-took').text(cachedResponseTook);
-            }
-            $('.js-response-time').text('...');
-            if (cachedResponseTime = storage.getItem(endpoint+':responseTime')) {
-                let responseTime = moment(cachedResponseTime);
-                $('.js-response-time').text(responseTime.fromNow());
-            }
+    $(document).on('click', '.js-endpoint-toggle', function () {
+        let service = $(this).data('service');
+        storage.setItem('active-service', service);
 
-            $('.js-request').val(requestTemplate);
-        });
+        let endpoint = $(this).data('endpoint');
+        storage.setItem('active-endpoint', endpoint);
+        $('.js-active-endpoint').text(endpoint);
+        $('.js-endpoint-toggle').removeClass('active');
+        $(this).addClass('active');
 
-        $(document).on('click', '.js-reset', function () {
-            let endpoint = storage.getItem('active-endpoint');
-            requestTemplate = $('.js-endpoint-toggle[data-endpoint="'+endpoint+'"]').find('.js-endpoint-request-template').text();
-            $('.js-request').val(requestTemplate);
-        });
+        let requestBody = JSON.parse($(this).find('.js-endpoint-request-template').text());
+		requestEditor.set('loading...');
+        db.requests.where('endpoint').equals(endpoint).first().then(function(request) {
+            if (request) {
+				requestBody = request.body;
+			}
+        }).catch(function(error){
+            console.log(error);
+        }).finally(function () {
+			requestEditor.set(requestBody);
+		});
 
-        $(document).on('keyup', '.js-request', function () {
-            let endpoint = storage.getItem('active-endpoint');
-            storage.setItem(endpoint + ':request', $(this).val());
-        });
+		responseEditor.set('loading...');
+		$('.js-response-took').text('...');
+		$('.js-response-time').text('...');
+		let cachedResponse = {
+			time: '...',
+			receivedAt: '',
+			body: ''
+		};
+        db.responses.where('endpoint').equals(endpoint).first().then(function(response) {
+            if (response) {
+				cachedResponse = response;
+			}
+        }).catch(function(error){
+            console.log(error);
+        }).finally(function () {
+			responseEditor.set(cachedResponse.body);
+			$('.js-response-took').text(cachedResponse.time);
+            $('.js-response-time').text(moment(cachedResponse.receivedAt).fromNow());
+		});
+    });
 
-        $('.collapse')
-            .on('show.bs.collapse', function () {
-                let id = $(this).attr('id');
-                storage.setItem(id + ':show', true);
-            })
-            .on('hide.bs.collapse', function () {
-                let id = $(this).attr('id');
-                storage.setItem(id + ':show', false);
-            })
-        ;
+    $(document).on('click', '.js-reset', function () {
+        let endpoint = storage.getItem('active-endpoint');
+        requestTemplate = $('.js-endpoint-toggle[data-endpoint="'+endpoint+'"]').find('.js-endpoint-request-template').text();
+        requestEditor.set(JSON.parse(requestTemplate));
+    });
 
-        $('.collapse').each(function () {
+    $(document).on('keyup', '#request-editor', function () {
+        let endpoint = storage.getItem('active-endpoint');
+        db.requests.put({endpoint: endpoint, body: requestEditor.get()});
+    });
+
+    $('.collapse')
+        .on('show.bs.collapse', function () {
             let id = $(this).attr('id');
-            if (storage.getItem(id + ':show') === 'true') {
-                $(this).collapse('show');
-            } else {
-                $(this).collapse('hide');
-            }
-        });
+            storage.setItem(id + ':show', true);
+        })
+        .on('hide.bs.collapse', function () {
+            let id = $(this).attr('id');
+            storage.setItem(id + ':show', false);
+        })
+    ;
 
-        if (activeEndpoint = storage.getItem('active-endpoint')) {
-            $('.js-endpoint-toggle[data-endpoint="' + activeEndpoint + '"]').trigger('click');
+    $('.collapse').each(function () {
+        let id = $(this).attr('id');
+        if (storage.getItem(id + ':show') === 'true') {
+            $(this).collapse('show');
+        } else {
+            $(this).collapse('hide');
+        }
+    });
+
+	function getMatches(string) {
+        var matches = [];
+        var match;
+        let regex = /Response\.(.+?)\((.+?),?(\s?int)?\)/g;
+        while (match = regex.exec(string)) {
+            matches[match[0]] = {
+                endpoint: match[1],
+                path: match[2],
+				type: match[3] || 'string',
+            };
+        }
+        return matches;
+    }
+
+	function pregQuote (str, delimiter) {
+		// Quote regular expression characters plus an optional character  
+		// 
+		// version: 1107.2516
+		// discuss at: http://phpjs.org/functions/preg_quote
+		// +   original by: booeyOH
+		// +   improved by: Ates Goral (http://magnetiq.com)
+		// +   improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+		// +   bugfixed by: Onno Marsman
+		// +   improved by: Brett Zamir (http://brett-zamir.me)
+		// *     example 1: preg_quote("$40");
+		// *     returns 1: '\$40'
+		// *     example 2: preg_quote("*RRRING* Hello?");
+		// *     returns 2: '\*RRRING\* Hello\?'
+		// *     example 3: preg_quote("\\.+*?[^]$(){}=!<>|:");
+		// *     returns 3: '\\\.\+\*\?\[\^\]\$\(\)\{\}\=\!\<\>\|\:'
+		return (str + '').replace(new RegExp('[.\\\\+*?\\[\\^\\]$(){}=!<>|:\\' + (delimiter || '/') + '-]', 'g'), '\\$&');
+	}
+
+	String.prototype.replaceAll = function(search, replacement) {
+		var target = this;
+		return target.replace(new RegExp(search, 'g'), replacement);
+	};
+
+    $(document).on('click', '.js-send', function () {
+        $('.js-send').prop('disabled', true);
+        let service = storage.getItem('active-service');
+        let endpoint = storage.getItem('active-endpoint');
+        let body;
+        try {
+            body = requestEditor.get();
+        } catch (e) {
+            alert('Request: ' + e.message);
         }
 
-        $(document).on('click', '.js-send', function () {
-			$('.js-send').prop('disabled', true);
-            let service = storage.getItem('active-service');
-            let endpoint = storage.getItem('active-endpoint');
-            let body;
-            try {
-                body = JSON.parse($('.js-request').val());
-            } catch (e) {
-                alert('Request: ' + e.message);
-            }
+        responseEditor.set('loading...')
+        $('.js-response-time').text('...');
+        $('.js-response-took').text('...');
 
-            storage.setItem(endpoint + ':response', '');
-            $('.js-response').text('loading...');
-            $('.js-response-time').text('...');
-            $('.js-response-took').text('...');
-            $.ajax({
-                method: 'POST',
-                url: 'call',
-                dataType: 'json',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    service: service,
-                    endpoint: endpoint,
-                    body: body,
-                }),
-                success: function (response) {
-                    let body;
-                    try {
-                        body = JSON.parse(response.Body);
-                    } catch (e) {
-                        body = response.Body;
-                    }
+		bodyText = JSON.stringify(body);
+		let matches = getMatches(bodyText);
 
-                    body = JSON.stringify(body, null, 2);
-                    let time = response.Time;
+		let promises = [];
+		for (let match in matches) {
+			let source = matches[match];
+			let replace = '';
+			
+			promises.push(db.responses.where('endpoint').equals(source.endpoint).first().then(function(response) {
+				if (response) {
+					replace = jsonpath.value(response.body, source.path);
+				}
+			}).catch(function(error){
+				console.log(error);
+			}).finally(function () {
+				if (source.type === 'int') {
+					match = '"' + match + '"';					
+				}
+				bodyText = bodyText.replaceAll(pregQuote(match), replace);
+			}));
+		}
+		
+		Promise.all(promises).then(function() {
+  			body = JSON.parse(bodyText);
+			console.log(body);
+			$.ajax({
+				method: 'POST',
+				url: 'call',
+				dataType: 'json',
+				contentType: 'application/json',
+				data: JSON.stringify({
+					service: service,
+					endpoint: endpoint,
+					body: body,
+				}),
+				success: function (response) {
+					let body;
 					try {
-						storage.setItem(endpoint + ':response', body);
+						body = JSON.parse(response.Body);
 					} catch (e) {
-						console.log(e.message)
+						body = response.Body;
 					}
-                    storage.setItem(endpoint + ':responseTime', moment().format());
-                    storage.setItem(endpoint + ':responseTook', time);
-
-                    $('.js-response-time').text('just now');
-                    $('.js-response-took').text(time);
-                    $('.js-response').text(body);
-                },
+	
+					$('.js-response-time').text('just now');
+					$('.js-response-took').text(response.Time);
+					responseEditor.set(body);
+	
+					db.responses.put({
+						endpoint: endpoint,
+						receivedAt: moment().format(),
+						time: response.Time,
+						body: body
+					});
+				},
 				error: function (jqXHR, textStatus, errorThrown) {
 					alert("AJAX error");
 				},
 				complete: function () {
 					$('.js-send').prop('disabled', false);
 				}
-            })
-        });
-
-		$(document).delegate('.js-request', 'keydown', function(e) {
-			var keyCode = e.keyCode || e.which;
-		
-			if (keyCode == 9) {
-				e.preventDefault();
-				var start = this.selectionStart;
-				var end = this.selectionEnd;
-		
-				// set textarea value to: text before caret + tab + text after caret
-				$(this).val($(this).val().substring(0, start)
-					+ "  "
-					+ $(this).val().substring(end));
-		
-				// put caret at right position again
-				this.selectionStart =
-					this.selectionEnd = start + 2;
-			}
+			});
 		});
-    })
+    });
+
+    $('#request-editor').keydown(function (e) {
+        if (e.ctrlKey && e.keyCode === 13) {
+            $('.js-send').trigger('click');
+        }
+    });
+
+    let activeEndpoint = storage.getItem('active-endpoint');
+    if (activeEndpoint) {
+        $('.js-endpoint-toggle[data-endpoint="' + activeEndpoint + '"]').trigger('click');
+    }
+});
 </script>
 </body>
 </html>
