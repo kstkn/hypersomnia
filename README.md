@@ -16,7 +16,7 @@ hypersomnia
 
 If default port 8083 is used by some other application, or if you don't want to bind on public interface you can use different setting of your choice:
 ```
-HYPERSOMNIA_ADD=127.0.0.1:31337 hypersomnia
+HYPERSOMNIA_ADDR=127.0.0.1:31337 hypersomnia
 ```
 
 To use consul registry:
