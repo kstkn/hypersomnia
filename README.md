@@ -23,3 +23,8 @@ To use consul registry:
 ```
 HYPERSOMNIA_REGISTRY=consul hypersomnia
 ```
+
+## Development
+
+To ship hypersomnia to the target system we have to include HTML template into binary. We use `go generate` for that, so
+after any changes to `templates/index.html` don't forget to run `go generate` and commit `templates/index.go` 

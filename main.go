@@ -21,6 +21,8 @@ import (
 	"time"
 )
 
+//go:generate go run templates.go
+
 type Config struct {
 	Addr     string `default:":8083"`
 	Registry string `default:"mdns"`

@@ -17,6 +17,8 @@ require (
 	github.com/nats-io/nkeys v0.1.0 // indirect
 	github.com/prometheus/procfs v0.0.3 // indirect
 	github.com/serenize/snaker v0.0.0-20171204205717-a683aaf2d516
+	github.com/tdewolff/minify/v2 v2.5.1 // indirect
+	github.com/tdewolff/test v1.0.1 // indirect
 	golang.org/x/exp v0.0.0-20190627132806-fd42eb6b336f // indirect
 	golang.org/x/image v0.0.0-20190703141733-d6a02ce849c9 // indirect
 	golang.org/x/mobile v0.0.0-20190711165009-e47acb2ca7f9 // indirect
