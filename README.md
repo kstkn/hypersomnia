@@ -24,6 +24,24 @@ To use consul registry:
 HYPERSOMNIA_REGISTRY=consul hypersomnia
 ```
 
+## Reference values from other request's responses
+
+In request you can reference value from other request's response by using `Response.Endpoint(<jsonpath>[,int])` 
+
+```
+{
+    "someField": "Response.SomeService.SomeEndpoint($.items[0].id)" 
+}
+```
+
+To insert integer instead of string:
+
+```
+{
+    "someField": "Response.SomeService.SomeEndpoint($.items[0].id,int)" 
+}
+```
+
 ## Development
 
 To ship hypersomnia to the target system we have to include HTML template into binary. We use `go generate` for that, so
