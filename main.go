@@ -59,6 +59,8 @@ func main() {
 		reg = consul.NewRegistry()
 	}
 
+	cl := client.NewClient(client.Registry(reg))
+
 	tmpl, err = template.New("index").Funcs(template.FuncMap{
 		"id": func(v string) string {
 			return strings.ReplaceAll(snaker.CamelToSnake(v), ".", "-")
@@ -93,6 +95,7 @@ func main() {
 			fmt.Fprintln(w, err.Error())
 		}
 	})
+
 	http.HandleFunc("/call", func(w http.ResponseWriter, r *http.Request) {
 		call := &Call{}
 		decoder := json.NewDecoder(r.Body)
@@ -110,7 +113,7 @@ func main() {
 
 		start := time.Now()
 		serviceRequest := (*cmd.DefaultOptions().Client).NewRequest(call.Service, call.Endpoint, call.Body, client.WithContentType("application/json"))
-		err = (*cmd.DefaultOptions().Client).Call(context.Background(), serviceRequest, &serviceResponse, client.WithRequestTimeout(time.Minute))
+		err = cl.Call(context.Background(), serviceRequest, &serviceResponse, client.WithRequestTimeout(time.Minute))
 
 		response := Response{
 			Time: time.Since(start).Round(time.Millisecond).String(),
