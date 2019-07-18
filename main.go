@@ -81,6 +81,8 @@ func main() {
 			service, err := registry.GetService(service.Name)
 			if err != nil {
 				log.Fatal(err)
+			}
+			if len(service) == 0 {
 				continue
 			}
 			results = append(results, service[0])
