@@ -47,7 +47,7 @@
                                          data-service="{{$service}}" data-endpoint="{{.Name}}">
                                         {{.Name}}
                                         <pre style="display:none;"
-                                             class="js-endpoint-request-template">{{- formatEndpoint .Request -}}</pre>
+                                             class="js-endpoint-request-template">{{- formatRequestTemplate .Request -}}</pre>
                                     </div></li>
                             {{else}}
                                 <li class="pl-3 mb-2 text-muted">(no endpoints)</li>
@@ -240,7 +240,7 @@
 
             Promise.all(promises).then(function() {
                 body = JSON.parse(bodyText);
-                console.log(body);
+                console.log('Service: ' + service + '\nEndpoint: ' + endpoint + '\nRequest: ' + JSON.stringify(body));
                 $.ajax({
                     method: 'POST',
                     url: 'call',

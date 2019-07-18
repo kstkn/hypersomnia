@@ -49,6 +49,6 @@ func Value(v *registry.Value, r int) string {
 	return fmt.Sprintf(strings.Join(fparts, ""), vals...)
 }
 
-func Endpoint(v *registry.Value, r int) string {
+func RequestTemplate(v *registry.Value, r int) string {
 	return strings.TrimRight(Value(v, r), ",\n") + "\n"
 }
