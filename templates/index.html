@@ -47,7 +47,7 @@
                                          data-service="{{$service}}" data-endpoint="{{.Name}}">
                                         {{.Name}}
                                         <pre style="display:none;"
-                                             class="js-endpoint-request-template">{{- formatRequestTemplate .Request -}}</pre>
+                                             class="js-endpoint-request-template">{{- .RequestTemplate -}}</pre>
                                     </div></li>
                             {{else}}
                                 <li class="pl-3 mb-2 text-muted">(no endpoints)</li>

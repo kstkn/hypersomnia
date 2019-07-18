@@ -29,28 +29,38 @@ type config struct {
 	RpcRequestTimeout string `default:"1m"`
 }
 
-type indexView struct {
-	Services []*registry.Service
+func check(err error) {
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 }
 
-type request struct {
-	Service  string
-	Endpoint string
-	Body     map[string]interface{}
-}
-
-type response struct {
-	Body string
-	Time string
+func getServiceView(service *registry.Service) interface{} {
+	serviceView := &struct {
+		Name      string
+		Endpoints []interface{}
+	}{
+		Name: service.Name,
+	}
+	for _, e := range service.Endpoints {
+		endpoint := &struct {
+			Name            string
+			RequestTemplate string
+		}{
+			Name:            e.Name,
+			RequestTemplate: format.RequestTemplateAsString(e.Request),
+		}
+		serviceView.Endpoints = append(serviceView.Endpoints, endpoint)
+	}
+	return serviceView
 }
 
 func main() {
 	var conf config
 	var reg registry.Registry
 
-	if err := envconfig.Process("hypersomnia", &conf); err != nil {
-		log.Fatal(err.Error())
-	}
+	err := envconfig.Process("hypersomnia", &conf)
+	check(err)
 
 	if conf.Registry == "mdns" {
 		reg = mdns.NewRegistry()
@@ -59,9 +69,7 @@ func main() {
 	}
 
 	rpcRequestTimeout, err := time.ParseDuration(conf.RpcRequestTimeout)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+	check(err)
 
 	cl := client.NewClient(client.Registry(reg))
 
@@ -69,23 +77,18 @@ func main() {
 		"id": func(v string) string {
 			return strings.ReplaceAll(snaker.CamelToSnake(v), ".", "-")
 		},
-		"formatRequestTemplate": func(v *registry.Value) string {
-			return format.RequestTemplate(v, 0)
-		},
 	}).Parse(templates.Index)
-
-	if err != nil {
-		log.Fatal(err)
-	}
+	check(err)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		var services []*registry.Service
-		if services, err = reg.ListServices(); err != nil {
-			log.Fatal(err.Error())
-		}
+		services, err := reg.ListServices()
+		check(err)
 		sort.Slice(services, func(i, j int) bool { return services[i].Name < services[j].Name })
 
-		var servicesWithEndpoints []*registry.Service
+		servicesView := struct {
+			Services []interface{}
+		}{}
+
 		for _, service := range services {
 			var serviceInfo []*registry.Service
 			if serviceInfo, err = reg.GetService(service.Name); err != nil {
@@ -94,21 +97,26 @@ func main() {
 			if len(serviceInfo) == 0 {
 				continue
 			}
-			servicesWithEndpoints = append(servicesWithEndpoints, serviceInfo[0])
+			servicesView.Services = append(servicesView.Services, getServiceView(serviceInfo[0]))
 		}
-		view := indexView{Services: servicesWithEndpoints}
 
-		if err := tmpl.Execute(w, view); err != nil {
+		if err := tmpl.Execute(w, servicesView); err != nil {
 			fmt.Fprintln(w, err.Error())
 		}
 	})
 
 	http.HandleFunc("/call", func(w http.ResponseWriter, r *http.Request) {
-		request := &request{}
+		req := &struct {
+			Service  string
+			Endpoint string
+			Body     map[string]interface{}
+		}{}
 		decoder := json.NewDecoder(r.Body)
-		err := decoder.Decode(request)
+		err := decoder.Decode(req)
 		if err != nil {
-			resp := &response{
+			resp := &struct {
+				Body string
+			}{
 				Body: err.Error(),
 			}
 			bytes, _ := json.Marshal(resp)
@@ -120,9 +128,9 @@ func main() {
 
 		start := time.Now()
 		serviceRequest := cl.NewRequest(
-			request.Service,
-			request.Endpoint,
-			request.Body,
+			req.Service,
+			req.Endpoint,
+			req.Body,
 			client.WithContentType("application/json"),
 		)
 		err = cl.Call(
@@ -132,16 +140,18 @@ func main() {
 			client.WithRequestTimeout(rpcRequestTimeout),
 		)
 
-		response := response{
+		resp := struct {
+			Body string
+			Time string
+		}{
 			Time: time.Since(start).Round(time.Millisecond).String(),
 		}
-
 		if err != nil {
-			response.Body = err.Error()
+			resp.Body = err.Error()
 		} else {
-			response.Body = string(serviceResponse)
+			resp.Body = string(serviceResponse)
 		}
-		bytes, _ := json.Marshal(response)
+		bytes, _ := json.Marshal(resp)
 		fmt.Fprintln(w, string(bytes))
 	})
 
