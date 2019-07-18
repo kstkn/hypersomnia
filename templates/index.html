@@ -35,9 +35,10 @@
             {{range .Services}}
                 <div>
                     <div style="cursor:pointer;" class="mt-1 mb-1" data-toggle="collapse" href="#{{id .Name}}"
-                         role="button"><strong>
-                            <i class="fas fa-cube"></i> {{.Name}}
-                        </strong></div>
+                         role="button">
+                        <i class="fas fa-cube pr-1"></i>
+                        <strong>{{.Name}}</strong>
+                    </div>
                     <div class="mb-4 collapse show" id="{{id .Name}}">
                         {{ $service := .Name }}
                         <ul class="list-unstyled">
