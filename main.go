@@ -78,7 +78,7 @@ func main() {
 
 		var results []*registry.Service
 		for _, service := range services {
-			service, err := registry.GetService(service.Name)
+			service, err := reg.GetService(service.Name)
 			if err != nil {
 				log.Fatal(err)
 			}
