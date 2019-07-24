@@ -42,6 +42,15 @@ To insert integer instead of string:
 }
 ```
 
+## Interact with services in the cloud
+
+This is possible if there's publicly available instance of micro web dashboard. To configure, pass a map with 
+environment name as a key and micro web dashboard url as value:
+
+```
+HYPERSOMNIA_ENVIRONMENTS="dev:https://web-dev.example.com;stage:https://web-stage.example.com" hypersomnia 
+```  
+
 ## Development
 
 To ship hypersomnia to the target system we have to include HTML template into binary. We use `go generate` for that, so

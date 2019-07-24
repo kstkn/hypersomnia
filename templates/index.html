@@ -27,40 +27,19 @@
 </head>
 <body>
 <div class="container-fluid p-2 pl-4">
+    Environment: <select class="js-environment">
+        {{range .Envs}}
+        <option value="{{.}}">{{.}}</option>
+        {{end}}
+    </select>
     <div class="row">
         <div class="col-sm">
             <div class="mt-1 mb-1">
                 Services:
             </div>
-            {{range .Services}}
-                <div>
-                    <div style="cursor:pointer;" class="mt-1 mb-1" data-toggle="collapse" href="#{{id .Name}}"
-                         role="button">
-                        <i class="fas fa-cube pr-1"></i>
-                        <strong>{{.Name}}</strong>
-                    </div>
-                    <div class="mb-4 collapse show" id="{{id .Name}}">
-                        {{ $service := .Name }}
-                        <ul class="list-unstyled">
-                            {{range .Endpoints}}
-                                <li><div class="ml-3 pl-1 pr-1 mb-2 js-endpoint-toggle" style="cursor: pointer;display: inline-block;"
-                                         data-service="{{$service}}" data-endpoint="{{.Name}}">
-                                        {{.Name}}
-                                        <pre style="display:none;"
-                                             class="js-endpoint-request-template">{{- .RequestTemplate -}}</pre>
-                                    </div></li>
-                            {{else}}
-                                <li class="pl-3 mb-2 text-muted">(no endpoints)</li>
-                            {{end}}
-                        </ul>
-                    </div>
-                </div>
-            {{else}}
-                <div>
-                    <strong>no services are running</strong><br>
-                    <small>if you think this is wrong, check your registry choice</small>
-                </div>
-            {{end}}
+            <div class="js-services">
+
+            </div>
         </div>
         <div class="col-sm">
             <div class="mb-2 clearfix">
@@ -110,6 +89,22 @@
         return matches;
     }
 
+    function pack(v) {
+        let m = {};
+        for (let i in v.values) {
+            if(v.values[i].values == null || v.values[i].values.length == 0) {
+                if(v.values[i].type == 'string') {
+                    m[v.values[i].name] = "";
+                } else {
+                    m[v.values[i].name] = 0;
+                }
+            } else {
+                m[v.values[i].name] = pack(v.values[i]);
+            }
+        }
+        return m
+    }
+
     let storage = window.localStorage;
 
     let db = new Dexie("hypersomnia");
@@ -117,6 +112,8 @@
         requests: 'endpoint,body',
         responses: 'endpoint,time,receivedAt,body'
     });
+
+    let activeEndpoint = storage.getItem('active-endpoint');
 
     $(function () {
         let requestEditor = new JSONEditor(document.getElementById("request-editor"), {
@@ -127,6 +124,50 @@
         let responseEditor = new JSONEditor(document.getElementById("response-editor"), {
             mode: 'code',
         });
+
+        $('.js-environment').on('change', function () {
+            $('.js-environment').prop('disabled', true)
+            $.ajax({
+                method: 'POST',
+                url: 'services',
+                dataType: 'json',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    environment: $(this).val(),
+                }),
+                success: function (response) {
+                    $('.js-services').text('');
+                    for (let i in response) {
+                        let name = response[i].name;
+                        let id = name.replace(/\./g, '_');
+                        $('.js-services').append('<div style="cursor:pointer;" class="mt-1 mb-1 collapsed" data-toggle="collapse" href="#'+id+'"\n' +
+                            'role="button">\n' +
+                            '<i class="fas fa-cube pr-1"></i>\n' +
+                            '<strong>'+name+'</strong>\n' +
+                            '</div>\n' +
+                            '<div class="mb-4 collapse js-endpoints" id="'+id+'" data-service="'+name+'">...</div>'
+                        );
+                    }
+                    $('.collapse')
+                        .each(function () {
+                            let id = $(this).attr('id');
+                            if (storage.getItem(id + ':show') === 'true') {
+                                $(this).collapse('show');
+                            } else {
+                                $(this).collapse('hide');
+                            }
+                        })
+                    ;
+                },
+                error: function () {
+                    alert("AJAX error");
+                },
+                complete: function () {
+                    $('.js-environment').prop('disabled', false)
+                }
+            });
+        });
+        $('.js-environment').trigger('change');
 
         $(document).on('click', '.js-endpoint-toggle', function () {
             let service = $(this).data('service');
@@ -182,15 +223,51 @@
             requestEditor.set(JSON.parse(requestTemplate));
         });
 
-        $('.collapse')
-            .on('show.bs.collapse', function () {
+        $(document)
+            .on('show.bs.collapse', '.collapse', function () {
                 let id = $(this).attr('id');
                 storage.setItem(id + ':show', true);
+                let serviceName = $(this).data('service');
+                let container = $('.js-endpoints[id="'+id+'"]');
+                container.html('loading...');
+                $.ajax({
+                    method: 'POST',
+                    url: 'service',
+                    dataType: 'json',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        environment: $('.js-environment').val(),
+                        name: serviceName,
+                    }),
+                    success: function (response) {
+                        container.html('<ul class="list-unstyled"></ul>');
+                        for (let i in response.endpoints) {
+                            container.find('ul').append('<li><div class="ml-3 pl-1 pr-1 mb-2 js-endpoint-toggle"\n' +
+                                'style="cursor: pointer;display: inline-block;"\n' +
+                                'data-service="'+serviceName+'" data-endpoint="'+response.endpoints[i].name+'">\n' +
+                                response.endpoints[i].name+'\n' +
+                                '<pre style="display:none;"\n' +
+                                'class="js-endpoint-request-template">'+JSON.stringify(pack(response.endpoints[i].request))+'</pre>\n' +
+                                '</div></li>');
+                        }
+                        if (activeEndpoint) {
+                            console.log(activeEndpoint);
+                            $('.js-endpoint-toggle[data-endpoint="' + activeEndpoint + '"]').trigger('click');
+                        }
+                    },
+                    error: function () {
+                        alert("AJAX error");
+                    },
+                    complete: function () {
+                    }
+                });
             })
-            .on('hide.bs.collapse', function () {
+            .on('hide.bs.collapse', '.collapse', function () {
                 let id = $(this).attr('id');
                 storage.setItem(id + ':show', false);
             })
+        ;
+        $('.collapse')
             .each(function () {
                 let id = $(this).attr('id');
                 if (storage.getItem(id + ':show') === 'true') {
@@ -203,6 +280,7 @@
 
         $(document).on('click', '.js-send', function () {
             $('.js-send').prop('disabled', true);
+            let environment = $('.js-environment').val();
             let service = storage.getItem('active-service');
             let endpoint = storage.getItem('active-endpoint');
             let body;
@@ -240,13 +318,14 @@
 
             Promise.all(promises).then(function() {
                 body = JSON.parse(bodyText);
-                console.log('Service: ' + service + '\nEndpoint: ' + endpoint + '\nRequest: ' + JSON.stringify(body));
+                console.log('Environment: ' + environment + '\nService: ' + service + '\nEndpoint: ' + endpoint + '\nRequest: ' + JSON.stringify(body));
                 $.ajax({
                     method: 'POST',
                     url: 'call',
                     dataType: 'json',
                     contentType: 'application/json',
                     data: JSON.stringify({
+                        environment: environment,
                         service: service,
                         endpoint: endpoint,
                         body: body,
@@ -286,7 +365,6 @@
             }
         });
 
-        let activeEndpoint = storage.getItem('active-endpoint');
         if (activeEndpoint) {
             $('.js-endpoint-toggle[data-endpoint="' + activeEndpoint + '"]').trigger('click');
         }
