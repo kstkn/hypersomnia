@@ -5,6 +5,7 @@ go 1.12
 require (
 	cloud.google.com/go v0.41.0 // indirect
 	github.com/go-kit/kit v0.9.0 // indirect
+	github.com/google/uuid v1.1.1
 	github.com/gorilla/handlers v1.4.1 // indirect
 	github.com/gorilla/mux v1.7.3 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0

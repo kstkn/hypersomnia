@@ -53,7 +53,7 @@ func (c LocalClient) GetService(env, name string) (*registry.Service, error) {
 	return services[0], nil
 }
 
-func (c LocalClient) Call(env, service, endpoint string, body map[string]interface{}, response *json.RawMessage) error {
+func (c LocalClient) Call(ctx context.Context, env, service, endpoint string, body map[string]interface{}, response *json.RawMessage) error {
 	if env != EnvLocal {
 		return errors.New("local client can be used only with local environment")
 	}

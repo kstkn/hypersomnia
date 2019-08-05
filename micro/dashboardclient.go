@@ -2,7 +2,9 @@ package micro
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"github.com/micro/go-micro/metadata"
 	"github.com/micro/go-micro/registry"
 	"io/ioutil"
 	"net/http"
@@ -72,7 +74,18 @@ func (c DashboardClient) GetService(env, name string) (*registry.Service, error)
 	return services.Services[0], nil
 }
 
-func (c DashboardClient) Call(env, service, endpoint string, body map[string]interface{}, response *json.RawMessage) error {
+func enrichFromContext(ctx context.Context, r *http.Request) {
+	md, has := metadata.FromContext(ctx)
+	if !has {
+		return
+	}
+
+	for k, v := range md {
+		r.Header.Add(k, v)
+	}
+}
+
+func (c DashboardClient) Call(ctx context.Context, env, service, endpoint string, body map[string]interface{}, response *json.RawMessage) error {
 	u, _ := url.Parse(c.Envs[env] + "/rpc")
 
 	payload := struct {
@@ -95,6 +108,8 @@ func (c DashboardClient) Call(env, service, endpoint string, body map[string]int
 		return err
 	}
 	req.Header.Add("Content-Type", "application/json")
+	enrichFromContext(ctx, req)
+
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return err
