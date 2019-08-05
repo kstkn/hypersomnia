@@ -82,9 +82,11 @@ func main() {
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		err := tmpl.Execute(w, struct {
-			Envs []string
+			Envs        []string
+			JsTemplates template.HTML
 		}{
-			Envs: append(localClient.ListEnvs(), dashboardClient.ListEnvs()...),
+			append(localClient.ListEnvs(), dashboardClient.ListEnvs()...),
+			template.HTML(templates.JsTemplates),
 		})
 		if err != nil {
 			fmt.Fprintln(w, err.Error())
