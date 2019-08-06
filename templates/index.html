@@ -3,9 +3,11 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/6.1.0/jsoneditor.min.css">
-    <script src="https://kit.fontawesome.com/43cf7afab1.js"></script>
+    <link rel="dns-prefetch" href="//unpkg.com"/>
+    <link rel="dns-prefetch" href="//use.fontawesome.com"/>
+    <link rel="stylesheet" href="https://unpkg.com/bootstrap@4.3.1/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/jsoneditor@6.1.0/dist/jsoneditor.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.10.1/css/all.css">
     <title>Hypersomnia</title>
     <style>
         body, html {
@@ -80,14 +82,14 @@
         </div>
     </div>
 </div>
-<script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-<script src="https://momentjs.com/downloads/moment.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/6.1.0/jsoneditor.min.js"></script>
+<script src="https://unpkg.com/jquery@3.3.1/dist/jquery.min.js"></script>
+<script src="https://unpkg.com/popper.js@1.15.0/dist/umd/popper.min.js"></script>
+<script src="https://unpkg.com/bootstrap@4.3.1/dist/js/bootstrap.min.js"></script>
+<script src="https://unpkg.com/moment@2.24.0/min/moment.min.js"></script>
+<script src="https://unpkg.com/jsoneditor@6.1.0/dist/jsoneditor.min.js"></script>
 <script src="https://unpkg.com/dexie@2.0.4/dist/dexie.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jsonpath@1.0.2/jsonpath.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.0.1/mustache.min.js"></script>
+<script src="https://unpkg.com/jsonpath@1.0.2/jsonpath.min.js"></script>
+<script src="https://unpkg.com/mustache@3.0.1/mustache.min.js"></script>
 {{ .JsTemplates }}
 <script>
     let tmplService = $('#tmplService').html();
@@ -96,6 +98,17 @@
     String.prototype.replaceAll = function(search, replacement) {
         let target = this;
         return target.replace(new RegExp(search, 'g'), replacement);
+    };
+
+    Array.prototype.remove = function() {
+        var what, a = arguments, L = a.length, ax;
+        while (L && this.length) {
+            what = a[--L];
+            while ((ax = this.indexOf(what)) !== -1) {
+                this.splice(ax, 1);
+            }
+        }
+        return this;
     };
 
     var copyToClipboard = function(data) {
@@ -128,15 +141,17 @@
 
     function pack(v) {
         let m = {};
-        for (let i in v.values) {
-            if(v.values[i].values == null || v.values[i].values.length == 0) {
-                if(v.values[i].type == 'string') {
-                    m[v.values[i].name] = "";
+        if (typeof v !== 'undefined' && typeof v.values !== 'undefined') {
+            for (let i in v.values) {
+                if(v.values[i].values == null || v.values[i].values.length == 0) {
+                    if(v.values[i].type == 'string') {
+                        m[v.values[i].name] = "";
+                    } else {
+                        m[v.values[i].name] = 0;
+                    }
                 } else {
-                    m[v.values[i].name] = 0;
+                    m[v.values[i].name] = pack(v.values[i]);
                 }
-            } else {
-                m[v.values[i].name] = pack(v.values[i]);
             }
         }
         return m
@@ -180,11 +195,36 @@
                 }),
                 success: function (response) {
                     $('.js-services').text('');
+                    // Favorites
                     for (let i in response) {
                         let name = response[i].name;
+                        if (favorites.indexOf(name) === -1) {
+                            continue;
+                        }
                         let id = name.replace(/\./g, '_');
                         $('.js-services').append(Mustache.render(tmplService, {id: id, name: name}));
                     }
+
+                    for (let i in response) {
+                        let name = response[i].name;
+                        if (name === '') {
+                            continue;
+                        }
+                        if (favorites.indexOf(name) !== -1) {
+                            continue;
+                        }
+                        let id = name.replace(/\./g, '_');
+                        $('.js-services').append(Mustache.render(tmplService, {id: id, name: name}));
+                    }
+
+                    for (let i in favorites) {
+                        $('.js-favorite[data-service="'+favorites[i]+'"]')
+                            .addClass('js-favorite-on')
+                            .addClass('fas')
+                            .removeClass('far')
+                        ;
+                    }
+
                     $('.collapse')
                         .each(function () {
                             let id = $(this).attr('id');
@@ -401,8 +441,31 @@
         });
 
         $(document).on('click', '.js-favorite', function() {
-            favorites.push($(this).data('service'));
+            let service = $(this).data('service');
+            if (favorites.indexOf(service) === -1) {
+                favorites.push(service);
+                storage.setItem('favorites', JSON.stringify(favorites));
+                let serviceContainer = $(this).parent();
+                serviceContainer.parent().prepend(serviceContainer);
+            }
+            $(this)
+                .addClass('js-favorite-on')
+                .removeClass('far')
+                .addClass('fas')
+            ;
+        });
+
+        $(document).on('click', '.js-favorite-on', function() {
+            let service = $(this).data('service');
+            favorites.remove(service);
             storage.setItem('favorites', JSON.stringify(favorites));
+            $(this)
+                .removeClass('js-favorite-on')
+                .removeClass('fas')
+                .addClass('far')
+            ;
+            let serviceContainer = $(this).parent();
+            serviceContainer.parent().append(serviceContainer);
         });
 
         $('#request-editor').keydown(function (e) {

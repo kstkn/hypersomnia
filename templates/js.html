@@ -4,11 +4,11 @@
         <i class="far fa-star js-favorite" style="cursor:pointer;" data-service="{{ name }}"></i>
         <strong class="collapsed" style="cursor:pointer;" data-toggle="collapse" href="#{{ id }}">{{ name }}</strong>
     </div>
-    <div class="mb-4 collapse js-endpoints" id="{{ id }}" data-service="{{ name }}">...</div>
+    <div class="collapse js-endpoints" id="{{ id }}" data-service="{{ name }}">...</div>
 </script>
 
 <script id="tmplEndpoint" type="x-tmpl-mustache">
-    <li><div class="ml-3 pl-1 pr-1 mb-2 js-endpoint-toggle"
+    <li><div class="ml-3 pl-1 pr-1 mb-1 js-endpoint-toggle"
                 style="cursor: pointer;display: inline-block;"
                 data-service="{{ serviceName }}" data-endpoint="{{ endpointName }}">
             {{ endpointName }}
