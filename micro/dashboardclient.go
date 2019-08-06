@@ -13,19 +13,26 @@ import (
 
 type DashboardClient struct {
 	httpClient http.Client
-	Envs       map[string]string
+	envs       map[string]string
+}
+
+func NewDashboardClient(envs map[string]string) DashboardClient {
+	return DashboardClient{
+		http.Client{},
+		envs,
+	}
 }
 
 func (c DashboardClient) ListEnvs() []string {
-	v := make([]string, 0, len(c.Envs))
-	for name := range c.Envs {
+	v := make([]string, 0, len(c.envs))
+	for name := range c.envs {
 		v = append(v, name)
 	}
 	return v
 }
 
 func (c DashboardClient) ListServices(env string) ([]*registry.Service, error) {
-	u, _ := url.Parse(c.Envs[env] + "/registry")
+	u, _ := url.Parse(c.envs[env] + "/registry")
 	req, err := http.NewRequest(http.MethodGet, u.String(), bytes.NewBuffer(nil))
 
 	if err != nil {
@@ -48,7 +55,7 @@ func (c DashboardClient) ListServices(env string) ([]*registry.Service, error) {
 }
 
 func (c DashboardClient) GetService(env, name string) (*registry.Service, error) {
-	u, _ := url.Parse(c.Envs[env] + "/registry")
+	u, _ := url.Parse(c.envs[env] + "/registry")
 	q := u.Query()
 	q.Set("service", name)
 	u.RawQuery = q.Encode()
@@ -86,7 +93,7 @@ func enrichFromContext(ctx context.Context, r *http.Request) {
 }
 
 func (c DashboardClient) Call(ctx context.Context, env, service, endpoint string, body map[string]interface{}, response *json.RawMessage) error {
-	u, _ := url.Parse(c.Envs[env] + "/rpc")
+	u, _ := url.Parse(c.envs[env] + "/rpc")
 
 	payload := struct {
 		Service  string                 `json:"service"`

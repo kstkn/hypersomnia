@@ -3,6 +3,12 @@ package config
 import (
 	"regexp"
 	"strings"
+	"time"
+
+	"github.com/kelseyhightower/envconfig"
+	"github.com/micro/go-micro/registry"
+	"github.com/micro/go-micro/registry/consul"
+	"github.com/micro/go-micro/registry/mdns"
 )
 
 type Config struct {
@@ -12,12 +18,43 @@ type Config struct {
 	Environments      string
 }
 
-func GetEnvMap(s string) map[string]string {
-	envs := strings.Split(s, ";")
+func NewConfig() Config {
+	c := Config{}
+	if err := envconfig.Process("hypersomnia", &c); err != nil {
+		panic(err.Error())
+	}
+	return c
+}
+
+func (c Config) GetAddr() string {
+	return c.Addr
+}
+
+// Parses environment config string into map.
+func (c Config) GetEnvironments() map[string]string {
+	if c.Environments == "" {
+		return map[string]string{}
+	}
+	envs := strings.Split(c.Environments, ";")
 	r := regexp.MustCompile(`(?P<Name>[a-z]+?):(?P<BaseUrl>.+)`)
 	m := map[string]string{}
 	for _, env := range envs {
 		m[r.FindStringSubmatch(env)[1]] = r.FindStringSubmatch(env)[2]
 	}
 	return m
+}
+
+func (c Config) GetRpcRequestTimeout() time.Duration {
+	t, err := time.ParseDuration(c.RpcRequestTimeout)
+	if err != nil {
+		panic(err.Error())
+	}
+	return t
+}
+
+func (c Config) GetRegistry() registry.Registry {
+	if c.Registry == "consul" {
+		return consul.NewRegistry()
+	}
+	return mdns.NewRegistry()
 }

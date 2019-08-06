@@ -14,8 +14,12 @@ import (
 )
 
 type CallHandler struct {
-	LocalClient     micro.Client
-	DashboardClient micro.Client
+	localClient     micro.LocalClient
+	dashboardClient micro.DashboardClient
+}
+
+func NewCallHandler(localClient micro.LocalClient, dashboardClient micro.DashboardClient) CallHandler {
+	return CallHandler{localClient, dashboardClient}
 }
 
 func createContext(correlationId string) context.Context {
@@ -48,7 +52,7 @@ func (h CallHandler) Handle() http.HandlerFunc {
 		ctx := createContext(correlationId.String())
 
 		if req.Environment == micro.EnvLocal {
-			err = h.LocalClient.Call(
+			err = h.localClient.Call(
 				ctx,
 				req.Environment,
 				req.Service,
@@ -57,7 +61,7 @@ func (h CallHandler) Handle() http.HandlerFunc {
 				&serviceResponse,
 			)
 		} else {
-			err = h.DashboardClient.Call(
+			err = h.dashboardClient.Call(
 				ctx,
 				req.Environment,
 				req.Service,

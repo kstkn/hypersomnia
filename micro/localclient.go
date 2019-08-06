@@ -11,9 +11,17 @@ import (
 )
 
 type LocalClient struct {
-	MicroClient    client.Client
-	MicroRegistry  registry.Registry
-	RequestTimeout time.Duration
+	microClient    client.Client
+	microRegistry  registry.Registry
+	requestTimeout time.Duration
+}
+
+func NewLocalClient(microClient client.Client, microRegistry registry.Registry, requestTimeout time.Duration) LocalClient {
+	return LocalClient{
+		microClient,
+		microRegistry,
+		requestTimeout,
+	}
 }
 
 func (c LocalClient) ListEnvs() []string {
@@ -25,7 +33,7 @@ func (c LocalClient) ListServices(env string) ([]*registry.Service, error) {
 		return []*registry.Service{}, errors.New("local client can be used only with local environment")
 	}
 
-	services, err := c.MicroRegistry.ListServices()
+	services, err := c.microRegistry.ListServices()
 	if err != nil {
 		return []*registry.Service{}, err
 	}
@@ -41,7 +49,7 @@ func (c LocalClient) GetService(env, name string) (*registry.Service, error) {
 		return nil, errors.New("local client can be used only with local environment")
 	}
 
-	services, err := c.MicroRegistry.GetService(name)
+	services, err := c.microRegistry.GetService(name)
 	if err != nil {
 		return nil, err
 	}
@@ -58,17 +66,17 @@ func (c LocalClient) Call(ctx context.Context, env, service, endpoint string, bo
 		return errors.New("local client can be used only with local environment")
 	}
 
-	serviceRequest := c.MicroClient.NewRequest(
+	serviceRequest := c.microClient.NewRequest(
 		service,
 		endpoint,
 		body,
 		client.WithContentType("application/json"),
 	)
-	err := c.MicroClient.Call(
+	err := c.microClient.Call(
 		context.Background(),
 		serviceRequest,
 		response,
-		client.WithRequestTimeout(c.RequestTimeout),
+		client.WithRequestTimeout(c.requestTimeout),
 	)
 
 	if err != nil {

@@ -11,8 +11,12 @@ import (
 )
 
 type ServiceHandler struct {
-	LocalClient     micro.Client
-	DashboardClient micro.Client
+	localClient     micro.LocalClient
+	dashboardClient micro.DashboardClient
+}
+
+func NewServiceHandler(localClient micro.LocalClient, dashboardClient micro.DashboardClient) ServiceHandler {
+	return ServiceHandler{localClient, dashboardClient}
 }
 
 func (h ServiceHandler) Handle() http.HandlerFunc {
@@ -37,9 +41,9 @@ func (h ServiceHandler) Handle() http.HandlerFunc {
 
 		var service *registry.Service
 		if req.Environment == micro.EnvLocal {
-			service, err = h.LocalClient.GetService(req.Environment, req.Name)
+			service, err = h.localClient.GetService(req.Environment, req.Name)
 		} else {
-			service, err = h.DashboardClient.GetService(req.Environment, req.Name)
+			service, err = h.dashboardClient.GetService(req.Environment, req.Name)
 		}
 		if err != nil {
 			resp := &struct {
