@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"html/template"
 	"net/http"
 
@@ -22,15 +21,14 @@ func NewIndexHandler(localClient micro.LocalClient, dashboardClient micro.Dashbo
 
 func (h IndexHandler) Handle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := h.tmpl.Execute(w, struct {
+		if err := h.tmpl.Execute(w, struct {
 			Envs        []string
 			JsTemplates template.HTML
 		}{
 			append(h.localClient.ListEnvs(), h.dashboardClient.ListEnvs()...),
 			templates.JsTemplates,
-		})
-		if err != nil {
-			fmt.Fprintln(w, err.Error())
+		}); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
 }

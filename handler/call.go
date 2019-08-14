@@ -3,14 +3,13 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
-	"github.com/gietos/hypersomnia/micro"
-
 	"github.com/google/uuid"
 	"github.com/micro/go-micro/metadata"
+
+	"github.com/gietos/hypersomnia/micro"
 )
 
 type CallHandler struct {
@@ -30,6 +29,13 @@ func createContext(correlationId string) context.Context {
 	return ctx
 }
 
+func (h CallHandler) getClient(env string) micro.Client {
+	if env == micro.EnvLocal {
+		return h.localClient
+	}
+	return h.dashboardClient
+}
+
 func (h CallHandler) Handle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		req := &struct {
@@ -38,11 +44,10 @@ func (h CallHandler) Handle() http.HandlerFunc {
 			Endpoint    string
 			Body        map[string]interface{}
 		}{}
+
 		decoder := json.NewDecoder(r.Body)
-		err := decoder.Decode(req)
-		if err != nil {
-			bytes, _ := json.Marshal(&struct{ Body string }{Body: err.Error()})
-			fmt.Fprintln(w, string(bytes))
+		if err := decoder.Decode(req); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -51,40 +56,27 @@ func (h CallHandler) Handle() http.HandlerFunc {
 		correlationId, _ := uuid.NewRandom()
 		ctx := createContext(correlationId.String())
 
-		if req.Environment == micro.EnvLocal {
-			err = h.localClient.Call(
-				ctx,
-				req.Environment,
-				req.Service,
-				req.Endpoint,
-				req.Body,
-				&serviceResponse,
-			)
-		} else {
-			err = h.dashboardClient.Call(
-				ctx,
-				req.Environment,
-				req.Service,
-				req.Endpoint,
-				req.Body,
-				&serviceResponse,
-			)
-		}
-
 		resp := struct {
 			CorrelationId string
-			Body          string
 			Time          string
-		}{
-			CorrelationId: correlationId.String(),
-			Time:          time.Since(start).Round(time.Millisecond).String(),
-		}
-		if err != nil {
+			Body          string
+		}{correlationId.String(), "", ""}
+
+		if err := h.getClient(req.Environment).Call(
+			ctx,
+			req.Environment,
+			req.Service,
+			req.Endpoint,
+			req.Body,
+			&serviceResponse,
+		); err != nil {
 			resp.Body = err.Error()
 		} else {
 			resp.Body = string(serviceResponse)
 		}
+		resp.Time = time.Since(start).Round(time.Millisecond).String()
+
 		bytes, _ := json.Marshal(resp)
-		fmt.Fprintln(w, string(bytes))
+		w.Write(bytes)
 	}
 }

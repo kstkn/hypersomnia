@@ -3,6 +3,7 @@ package micro
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/micro/go-micro/registry"
 )
 

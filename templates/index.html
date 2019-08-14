@@ -45,40 +45,72 @@
         #request-editor, #response-editor {
             height: 90%;
         }
+
+        .clickable {
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 <div class="container-fluid p-2 pl-4">
-
     <div class="row parent">
-        <div class="col-sm" id="services">
-            Environment: <select class="js-environment">
+        <div class="col-sm" id="services" style="overflow-y: hidden;">
+            <label for="environmentSwitcher">Environment:</label> <select id="environmentSwitcher" class="js-environment">
                 {{range .Envs}}
                     <option value="{{.}}">{{.}}</option>
                 {{end}}
-            </select>
+            </select> <i class="fas fa-cog clickable js-environment-settings"></i>
             <div class="mt-1 mb-1">
                 Services:
             </div>
-            <div class="js-services">
+            <div class="js-services" style="overflow-y: auto; height: 90%;">
 
             </div>
         </div>
         <div class="col-sm" id="request">
             <div class="mb-2 clearfix">
-                <div class="js-active-endpoint float-left pt-1 pb-1"></div>
+                <div class="js-active-endpoint float-left pt-1 pb-1"><span class="text-muted">Select endpoint on the left</span></div>
                 <button class="btn btn-sm btn-primary js-send float-right">Send</button>
                 <button class="btn btn-sm btn-secondary js-reset float-right mr-2">Reset</button>
             </div>
             <div id="request-editor"></div>
         </div>
         <div class="col-sm" id="response">
-            <div class="mb-3 mt-3 clearfix">
+            <div class="mb-2 mt-3 clearfix">
                 <span class="badge badge-secondary js-response-time float-right">...</span>
                 <span class="badge badge-secondary js-response-took float-right mr-2">...</span>
                 <span class="badge badge-secondary js-correlation-id float-right mr-2" style="cursor: pointer;">...</span>
             </div>
             <div id="response-editor"></div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="environmentSettings" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Environment settings</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <h5>External logs</h5>
+                <p>Enter external log systems URLs here using <code>_correlationId_</code> as placeholer.
+                When you click correlation id badge on top of response box the placeholders in URL will be
+                    substituted with actual value and URL will open.</p>
+                <div class="js-environment-logs-urls">
+
+                    <div class="form-group">
+                        <label for="exampleInputPassword1">Password</label>
+                        <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary js-environment-settings-save" data-dismiss="modal">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
         </div>
     </div>
 </div>
@@ -94,6 +126,7 @@
 <script>
     let tmplService = $('#tmplService').html();
     let tmplEndpoint = $('#tmplEndpoint').html();
+    let tmplEnvironmentLogsUrl = $('#tmplEnvironmentLogsUrl').html();
 
     String.prototype.replaceAll = function(search, replacement) {
         let target = this;
@@ -101,7 +134,7 @@
     };
 
     Array.prototype.remove = function() {
-        var what, a = arguments, L = a.length, ax;
+        let what, a = arguments, L = a.length, ax;
         while (L && this.length) {
             what = a[--L];
             while ((ax = this.indexOf(what)) !== -1) {
@@ -111,7 +144,7 @@
         return this;
     };
 
-    var copyToClipboard = function(data) {
+    let copyToClipboard = function(data) {
         var tempInput = document.createElement('INPUT');
         let body = $('body')[0];
         body.appendChild(tempInput);
@@ -141,8 +174,11 @@
 
     function pack(v) {
         let m = {};
-        if (typeof v !== 'undefined' && typeof v.values !== 'undefined') {
+        if (v !== null && typeof v !== 'undefined' && typeof v.values !== 'undefined') {
             for (let i in v.values) {
+                if (v.values[i].name === '' || v.values[i].name === '-') {
+                    continue;
+                }
                 if(v.values[i].values == null || v.values[i].values.length == 0) {
                     if(v.values[i].type == 'string') {
                         m[v.values[i].name] = "";
@@ -183,8 +219,9 @@
             mode: 'code',
         });
 
-        $('.js-environment').on('change', function () {
-            $('.js-environment').prop('disabled', true)
+        let environmentSwitcher = $('.js-environment');
+        environmentSwitcher.on('change', function () {
+            $(this).prop('disabled', true);
             $.ajax({
                 method: 'POST',
                 url: 'services',
@@ -194,7 +231,8 @@
                     environment: $(this).val(),
                 }),
                 success: function (response) {
-                    $('.js-services').text('');
+                    let services = $('.js-services');
+                    services.text('');
                     // Favorites
                     for (let i in response) {
                         let name = response[i].name;
@@ -202,7 +240,7 @@
                             continue;
                         }
                         let id = name.replace(/\./g, '_');
-                        $('.js-services').append(Mustache.render(tmplService, {id: id, name: name}));
+                        services.append(Mustache.render(tmplService, {id: id, name: name}));
                     }
 
                     for (let i in response) {
@@ -214,7 +252,7 @@
                             continue;
                         }
                         let id = name.replace(/\./g, '_');
-                        $('.js-services').append(Mustache.render(tmplService, {id: id, name: name}));
+                        services.append(Mustache.render(tmplService, {id: id, name: name}));
                     }
 
                     for (let i in favorites) {
@@ -236,15 +274,15 @@
                         })
                     ;
                 },
-                error: function () {
-                    alert("AJAX error");
+                error: function (jqXHR, _, errorThrown) {
+                    alert(errorThrown + ': ' + jqXHR.responseText);
                 },
                 complete: function () {
                     $('.js-environment').prop('disabled', false)
                 }
             });
         });
-        $('.js-environment').trigger('change');
+        environmentSwitcher.trigger('change');
 
         $(document).on('click', '.js-endpoint-toggle', function () {
             let service = $(this).data('service');
@@ -263,7 +301,7 @@
                     requestBody = request.body;
                 }
             }).catch(function(error){
-                console.log(error);
+                console.error(error);
             }).finally(function () {
                 requestEditor.set(requestBody);
             });
@@ -284,18 +322,20 @@
                     cachedResponse = response;
                 }
             }).catch(function(error){
-                console.log(error);
+                console.error(error);
             }).finally(function () {
                 responseEditor.set(cachedResponse.body);
                 $('.js-response-took').text(cachedResponse.time);
-                $('.js-response-time').text(moment(cachedResponse.receivedAt).fromNow());
+                $('.js-response-time').text(cachedResponse.receivedAt ? moment(cachedResponse.receivedAt).fromNow() : '...');
                 $('.js-correlation-id').text(cachedResponse.correlationId);
             });
         });
 
         $(document).on('keyup', '#request-editor', function () {
             let endpoint = storage.getItem('active-endpoint');
-            db.requests.put({endpoint: endpoint, body: requestEditor.get()});
+            try {
+                db.requests.put({endpoint: endpoint, body: requestEditor.get()});
+            } catch (err) {}
         });
 
         $(document).on('click', '.js-reset', function () {
@@ -307,10 +347,17 @@
         $(document)
             .on('show.bs.collapse', '.collapse', function () {
                 let id = $(this).attr('id');
-                storage.setItem(id + ':show', true);
+                storage.setItem(id + ':show', 'true');
                 let serviceName = $(this).data('service');
                 let container = $('.js-endpoints[id="'+id+'"]');
                 container.html('loading...');
+
+                class Response {
+                    endpoints;
+                    Time;
+                    CorrelationId;
+                }
+
                 $.ajax({
                     method: 'POST',
                     url: 'service',
@@ -320,9 +367,15 @@
                         environment: $('.js-environment').val(),
                         name: serviceName,
                     }),
-                    success: function (response) {
+                    success: /** @param {Response} response */ function (response) {
                         container.html('<ul class="list-unstyled"></ul>');
                         for (let i in response.endpoints) {
+                            if (!response.endpoints.hasOwnProperty(i)) {
+                                continue;
+                            }
+                            if (response.endpoints[i].name === '') {
+                                continue;
+                            }
                             container.find('ul').append(Mustache.render(tmplEndpoint, {
                                 serviceName: serviceName,
                                 endpointName: response.endpoints[i].name,
@@ -333,8 +386,8 @@
                             $('.js-endpoint-toggle[data-endpoint="' + activeEndpoint + '"]').trigger('click');
                         }
                     },
-                    error: function () {
-                        alert("AJAX error");
+                    error: function (jqXHR, _, errorThrown) {
+                        alert(errorThrown + ': ' + jqXHR.responseText);
                     },
                     complete: function () {
                     }
@@ -342,7 +395,7 @@
             })
             .on('hide.bs.collapse', '.collapse', function () {
                 let id = $(this).attr('id');
-                storage.setItem(id + ':show', false);
+                storage.removeItem(id + ':show');
             })
         ;
         $('.collapse')
@@ -368,7 +421,7 @@
                 alert('Request: ' + e.message);
             }
 
-            responseEditor.set('loading...')
+            responseEditor.set('loading...');
             $('.js-response-time').text('...');
             $('.js-response-took').text('...');
             $('.js-correlation-id').text('...');
@@ -378,6 +431,12 @@
 
             let promises = [];
             for (let match in matches) {
+                if (!matches.hasOwnProperty(match)) {
+                    continue;
+                }
+                if (typeof matches[match].endpoint === 'undefined') {
+                    continue;
+                }
                 let source = matches[match];
                 let replace = '';
 
@@ -386,7 +445,7 @@
                         replace = jsonpath.value(response.body, source.path);
                     }
                 }).catch(function(error){
-                    console.log(error);
+                    console.error(error);
                 }).finally(function () {
                     if (source.type === 'int') {
                         match = '"' + match + '"';
@@ -397,7 +456,13 @@
 
             Promise.all(promises).then(function() {
                 body = JSON.parse(bodyText);
-                console.log('Environment: ' + environment + '\nService: ' + service + '\nEndpoint: ' + endpoint + '\nRequest: ' + JSON.stringify(body));
+                console.info('Environment: ' + environment + '\nService: ' + service + '\nEndpoint: ' + endpoint + '\nRequest: ' + JSON.stringify(body));
+                class Response {
+                    Body;
+                    Time;
+                    CorrelationId;
+                }
+
                 $.ajax({
                     method: 'POST',
                     url: 'call',
@@ -409,13 +474,14 @@
                         endpoint: endpoint,
                         body: body,
                     }),
-                    success: function (response) {
+                    success: /** @param {Response} response */ function (response) {
                         let body;
                         try {
                             body = JSON.parse(response.Body);
                         } catch (e) {
                             body = response.Body;
                         }
+                        console.info('Response: ' + response.Body);
 
                         $('.js-response-time').text('just now');
                         $('.js-response-took').text(response.Time);
@@ -430,8 +496,8 @@
                             correlationId: response.CorrelationId,
                         });
                     },
-                    error: function () {
-                        alert("AJAX error");
+                    error: function (jqXHR, _, errorThrown) {
+                        alert(errorThrown + ': ' + jqXHR.responseText);
                     },
                     complete: function () {
                         $('.js-send').prop('disabled', false);
@@ -445,7 +511,7 @@
             if (favorites.indexOf(service) === -1) {
                 favorites.push(service);
                 storage.setItem('favorites', JSON.stringify(favorites));
-                let serviceContainer = $(this).parent();
+                let serviceContainer = $(this).closest('.js-service');
                 serviceContainer.parent().prepend(serviceContainer);
             }
             $(this)
@@ -464,7 +530,7 @@
                 .removeClass('fas')
                 .addClass('far')
             ;
-            let serviceContainer = $(this).parent();
+            let serviceContainer = $(this).closest('.js-service');
             serviceContainer.parent().append(serviceContainer);
         });
 
@@ -475,15 +541,52 @@
         });
 
         $(document).on('click', '.js-correlation-id', function () {
-            copyToClipboard($(this).text());
+            let env = $('.js-environment').val();
+            let correlationId = $(this).text();
+            copyToClipboard(correlationId);
             $(this).tooltip('dispose');
             $(this).tooltip({title: 'Copied!'}).tooltip('show');
+
+            let url = storage.getItem('logs:' + env);
+            if (url !== null) {
+                url = url.replaceAll('_correlationId_', correlationId);
+                window.open(url, '_blank');
+            }
         });
         $(document).on('mouseleave', '.js-correlation-id', function () {
             $(this).tooltip('dispose');
             $(this).tooltip({title: 'Copy to clipboard'});
         });
         $('.js-correlation-id').tooltip({ title: 'Copy to clipboard' });
+
+        $(document).on('click', '.js-environment-settings', function() {
+            let container = $('.js-environment-logs-urls');
+            container.html('');
+            $('.js-environment option').each(function () {
+                let environment = $(this).val();
+                if (environment === 'local') {
+                    return
+                }
+                container.append(Mustache.render(tmplEnvironmentLogsUrl, {
+                    environment: environment,
+                    url: storage.getItem('logs:' + environment),
+                }));
+            });
+
+            $('#environmentSettings').modal();
+        });
+
+        $(document).on('click', '.js-environment-settings-save', function () {
+            $('.js-environment-url').each(function () {
+                let environment = $(this).data('environment');
+                let url = $(this).val();
+                if (url === '') {
+                    storage.removeItem('logs:' + environment);
+                } else {
+                    storage.setItem('logs:' + environment, $(this).val());
+                }
+            });
+        });
 
         if (activeEndpoint) {
             $('.js-endpoint-toggle[data-endpoint="' + activeEndpoint + '"]').trigger('click');

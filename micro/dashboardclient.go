@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/micro/go-micro/metadata"
-	"github.com/micro/go-micro/registry"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+
+	"github.com/micro/go-micro/metadata"
+	"github.com/micro/go-micro/registry"
 )
 
 type DashboardClient struct {
@@ -34,10 +35,10 @@ func (c DashboardClient) ListEnvs() []string {
 func (c DashboardClient) ListServices(env string) ([]*registry.Service, error) {
 	u, _ := url.Parse(c.envs[env] + "/registry")
 	req, err := http.NewRequest(http.MethodGet, u.String(), bytes.NewBuffer(nil))
-
 	if err != nil {
 		return []*registry.Service{}, err
 	}
+
 	req.Header.Add("Content-Type", "application/json")
 
 	resp, err := c.httpClient.Do(req)

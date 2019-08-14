@@ -2,12 +2,9 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/gietos/hypersomnia/micro"
-
-	"github.com/micro/go-micro/registry"
 )
 
 type ServiceHandler struct {
@@ -19,6 +16,13 @@ func NewServiceHandler(localClient micro.LocalClient, dashboardClient micro.Dash
 	return ServiceHandler{localClient, dashboardClient}
 }
 
+func (h ServiceHandler) getClient(env string) micro.Client {
+	if env == micro.EnvLocal {
+		return h.localClient
+	}
+	return h.dashboardClient
+}
+
 func (h ServiceHandler) Handle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		req := &struct {
@@ -27,36 +31,18 @@ func (h ServiceHandler) Handle() http.HandlerFunc {
 		}{}
 
 		decoder := json.NewDecoder(r.Body)
-		err := decoder.Decode(req)
-		if err != nil {
-			resp := &struct {
-				Body string
-			}{
-				Body: err.Error(),
-			}
-			bytes, _ := json.Marshal(resp)
-			fmt.Fprintln(w, string(bytes))
+		if err := decoder.Decode(req); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		var service *registry.Service
-		if req.Environment == micro.EnvLocal {
-			service, err = h.localClient.GetService(req.Environment, req.Name)
-		} else {
-			service, err = h.dashboardClient.GetService(req.Environment, req.Name)
-		}
+		service, err := h.getClient(req.Environment).GetService(req.Environment, req.Name)
 		if err != nil {
-			resp := &struct {
-				Body string
-			}{
-				Body: err.Error(),
-			}
-			bytes, _ := json.Marshal(resp)
-			fmt.Fprintln(w, string(bytes))
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		bytes, _ := json.Marshal(service)
-		fmt.Fprintln(w, string(bytes))
+		w.Write(bytes)
 	}
 }

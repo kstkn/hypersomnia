@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/micro/go-micro/client"
-	"github.com/micro/go-micro/registry"
 	"sort"
 	"time"
+
+	"github.com/micro/go-micro/client"
+	"github.com/micro/go-micro/registry"
 )
 
 type LocalClient struct {
