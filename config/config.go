@@ -30,13 +30,13 @@ func (c Config) GetAddr() string {
 	return c.Addr
 }
 
-// Parses environment config string into map.
+// Parses micro web environment urls into map.
 func (c Config) GetEnvironments() map[string]string {
 	if c.Environments == "" {
 		return map[string]string{}
 	}
 	envs := strings.Split(c.Environments, ";")
-	r := regexp.MustCompile(`(?P<Name>[a-z]+?):(?P<BaseUrl>.+)`)
+	r := regexp.MustCompile(`(?P<Name>[a-z]+?):(?P<Url>.+)`)
 	m := map[string]string{}
 	for _, env := range envs {
 		m[r.FindStringSubmatch(env)[1]] = r.FindStringSubmatch(env)[2]

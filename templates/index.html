@@ -39,7 +39,8 @@
         }
 
         .ace-jsoneditor.ace_editor {
-            font-size: 10px!important;
+            font-family: Monaco,Menlo,Consolas,"Courier New",monospace !important;
+            font-size: 10px !important;
         }
 
         #request-editor, #response-editor {
@@ -55,11 +56,15 @@
 <div class="container-fluid p-2 pl-4">
     <div class="row parent">
         <div class="col-sm" id="services" style="overflow-y: hidden;">
-            <label for="environmentSwitcher">Environment:</label> <select id="environmentSwitcher" class="js-environment">
-                {{range .Envs}}
-                    <option value="{{.}}">{{.}}</option>
-                {{end}}
-            </select> <i class="fas fa-cog clickable js-environment-settings"></i>
+            {{ $length := len .Envs }}
+            <div {{if le $length 1}} style="display: none;"{{end}}>
+                <label for="environmentSwitcher">Environment:</label> <select id="environmentSwitcher" class="js-environment">
+                    {{range .Envs}}
+                        <option value="{{.}}">{{.}}</option>
+                    {{end}}
+                </select> <i class="fas fa-cog clickable js-environment-settings"></i>
+            </div>
+
             <div class="mt-1 mb-1">
                 Services:
             </div>

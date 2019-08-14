@@ -23,6 +23,7 @@ require (
 	github.com/prometheus/procfs v0.0.3 // indirect
 	github.com/serenize/snaker v0.0.0-20171204205717-a683aaf2d516
 	github.com/sirupsen/logrus v1.4.2
+	github.com/stretchr/testify v1.3.0
 	github.com/tdewolff/minify/v2 v2.5.1 // indirect
 	github.com/tdewolff/test v1.0.1 // indirect
 	golang.org/x/exp v0.0.0-20190627132806-fd42eb6b336f // indirect
