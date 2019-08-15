@@ -1,8 +1,8 @@
 <script id="tmplService" type="x-tmpl-mustache">
     <div class="js-service">
         <div class="mt-1 mb-1">
-            <i class="fas fa-cube pr-1"></i>
-            <i class="far fa-star js-favorite" style="cursor:pointer;" data-service="{{ name }}"></i>
+            <svg class="icon"><use href="#cube"/></svg>
+            <svg class="icon clickable js-favorite" data-service="{{ name }}"><use href="#star-regular"/></svg>
             <strong class="collapsed" style="cursor:pointer;" data-toggle="collapse" href="#{{ id }}">{{ name }}</strong>
         </div>
         <div class="collapse js-endpoints" id="{{ id }}" data-service="{{ name }}">...</div>
