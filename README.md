@@ -3,6 +3,8 @@
 Hypersomnia is a web tool to debug your [micro](https://github.com/micro/go-micro) services RPC endpoints. 
 Created as a user-friendly replacement of [micro web](https://github.com/micro/micro/tree/master/web).
 
+![](https://i.imgur.com/VJHYUx6.png)
+
 ## Install
 ```
 go get -u github.com/gietos/hypersomnia
@@ -54,7 +56,23 @@ HYPERSOMNIA_ENVIRONMENTS="dev:https://web-dev.example.com;stage:https://web-stag
 
 You will see configured environments in environment switcher:
 
-![](https://i.imgur.com/FF5UxOt.png)
+![](https://i.imgur.com/642Ycdq.png)
+
+## Quick access to external system to search by correlation id
+
+For each environment you can set up an URL template to open quickly by pressing correlation id badge.
+Special placeholder `_correlationId_` will be replaced and URL will open.
+It can be log collector, like kibana. To set up URLs, press environment settings button next to environment selector:
+
+![](https://i.imgur.com/yQSRj4O.png)
+
+Settings popup will open:
+
+![](https://i.imgur.com/xGu7ffp.png)
+
+Now to quickly open external URL, click correlation id badge on top of response block:
+
+![](https://i.imgur.com/K3L9Ze7.png) 
 
 ## Development
 

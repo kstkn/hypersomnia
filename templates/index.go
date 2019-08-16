@@ -73,6 +73,6 @@ const JsTemplates = `<script id=tmplService type=x-tmpl-mustache>
 </script><script id=tmplEnvironmentLogsUrl type=x-tmpl-mustache>
     <div class="form-group">
         <label for="{{ environment }}Url">{{ environment }}</label>
-        <textarea class="form-control form-control-sm js-environment-url" data-environment="{{ environment }}" id="{{ environment }}Url" rows="4">{{ url }}</textarea>
+        <textarea class="form-control form-control-sm js-environment-url" data-environment="{{ environment }}" id="{{ environment }}Url" rows="4" spellcheck="false">{{ url }}</textarea>
     </div>
 </script>`
