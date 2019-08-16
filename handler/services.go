@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"sort"
 	"sync"
 
 	log "github.com/sirupsen/logrus"
@@ -83,6 +84,7 @@ func (h ServicesHandler) Handle() http.HandlerFunc {
 		}()
 
 		<-done
+		sort.Slice(results, func(i, j int) bool { return results[i].Name < results[j].Name })
 		bytes, _ := json.Marshal(results)
 		w.Write(bytes)
 	}

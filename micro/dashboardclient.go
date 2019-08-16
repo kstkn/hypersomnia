@@ -51,7 +51,10 @@ func (c DashboardClient) ListServices(env string) ([]*registry.Service, error) {
 	services := struct {
 		Services []*registry.Service
 	}{}
-	json.Unmarshal(responseBody, &services)
+	if err = json.Unmarshal(responseBody, &services); err != nil {
+		return []*registry.Service{}, err
+	}
+
 	return services.Services, nil
 }
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"sort"
 	"time"
 
 	"github.com/micro/go-micro/client"
@@ -38,9 +37,6 @@ func (c LocalClient) ListServices(env string) ([]*registry.Service, error) {
 	if err != nil {
 		return []*registry.Service{}, err
 	}
-
-	// We want them sorted, so each time order is the same
-	sort.Slice(services, func(i, j int) bool { return services[i].Name < services[j].Name })
 
 	return services, nil
 }
