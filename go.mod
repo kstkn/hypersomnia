@@ -19,6 +19,7 @@ require (
 	github.com/miekg/dns v1.1.15 // indirect
 	github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // indirect
 	github.com/nats-io/nkeys v0.1.0 // indirect
+	github.com/posener/complete v1.2.1
 	github.com/prometheus/common v0.6.0
 	github.com/prometheus/procfs v0.0.3 // indirect
 	github.com/serenize/snaker v0.0.0-20171204205717-a683aaf2d516

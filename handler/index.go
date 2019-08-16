@@ -10,11 +10,11 @@ import (
 
 type IndexHandler struct {
 	tmpl            *template.Template
-	localClient     micro.LocalClient
-	dashboardClient micro.DashboardClient
+	localClient     micro.Client
+	dashboardClient micro.Client
 }
 
-func NewIndexHandler(localClient micro.LocalClient, dashboardClient micro.DashboardClient) IndexHandler {
+func NewIndexHandler(localClient micro.Client, dashboardClient micro.Client) IndexHandler {
 	tmpl := template.Must(template.New("index").Parse(templates.Index))
 	return IndexHandler{tmpl, localClient, dashboardClient}
 }

@@ -70,7 +70,7 @@ func (c LocalClient) Call(ctx context.Context, env, service, endpoint string, bo
 		client.WithContentType("application/json"),
 	)
 	err := c.microClient.Call(
-		context.Background(),
+		ctx,
 		serviceRequest,
 		response,
 		client.WithRequestTimeout(c.requestTimeout),

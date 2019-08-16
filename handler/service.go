@@ -8,11 +8,11 @@ import (
 )
 
 type ServiceHandler struct {
-	localClient     micro.LocalClient
-	dashboardClient micro.DashboardClient
+	localClient     micro.Client
+	dashboardClient micro.Client
 }
 
-func NewServiceHandler(localClient micro.LocalClient, dashboardClient micro.DashboardClient) ServiceHandler {
+func NewServiceHandler(localClient micro.Client, dashboardClient micro.Client) ServiceHandler {
 	return ServiceHandler{localClient, dashboardClient}
 }
 

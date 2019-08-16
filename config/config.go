@@ -13,7 +13,8 @@ import (
 
 type Config struct {
 	Addr              string `default:"localhost:8083"`
-	Registry          string `default:"mdns"`
+	Registry          string `default:"consul"`
+	RegistryAddress   string `split_words:"true" default:"localhost:8500"`
 	RpcRequestTimeout string `default:"1m"`
 	Environments      string
 }

@@ -1,20 +1,24 @@
 <script id="tmplService" type="x-tmpl-mustache">
-    <div class="js-service">
+    <div class="js-service" data-service="{{ name }}">
         <div class="mt-1 mb-1">
             <svg class="icon"><use href="#cube"/></svg>
             <svg class="icon clickable js-favorite" data-service="{{ name }}"><use href="#star-regular"/></svg>
             <strong class="collapsed" style="cursor:pointer;" data-toggle="collapse" href="#{{ id }}">{{ name }}</strong>
+            <span class="badge badge-secondary js-version"></span>
         </div>
-        <div class="collapse js-endpoints" id="{{ id }}" data-service="{{ name }}">...</div>
+        <div class="collapse js-requests" id="{{ id }}" data-service="{{ name }}">...</div>
     </div>
 </script>
 
-<script id="tmplEndpoint" type="x-tmpl-mustache">
-    <li><div class="ml-3 pl-1 pr-1 mb-1 js-endpoint-toggle"
+<script id="tmplRequest" type="x-tmpl-mustache">
+    <li><div class="ml-3 pl-1 pr-1 mb-1 js-request"
                 style="cursor: pointer;display: inline-block;"
-                data-service="{{ serviceName }}" data-endpoint="{{ endpointName }}">
-            {{ endpointName }}
-            <pre style="display:none;" class="js-endpoint-request-template">{{ requestTemplate }}</pre>
+                data-name="{{ name }}" data-service="{{ service }}" data-endpoint="{{ endpoint }}" data-static="{{ static }}">
+            {{ name }}
+            <svg class="js-request-edit icon" style="display:none;"><use href="#edit-solid"/></svg>
+            <svg class="js-request-duplicate icon" style="display:none;"><use href="#paste-solid"/></svg>
+            <svg class="js-request-delete icon icon-danger" style="display:none;"><use href="#trash-solid"/></svg>
+            <pre style="display:none;" class="js-request-body-template">{{ requestBodyTemplate }}</pre>
     </div></li>
 </script>
 

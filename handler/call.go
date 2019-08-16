@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"github.com/prometheus/common/log"
 	"net/http"
 	"time"
 
@@ -13,11 +14,11 @@ import (
 )
 
 type CallHandler struct {
-	localClient     micro.LocalClient
-	dashboardClient micro.DashboardClient
+	localClient     micro.Client
+	dashboardClient micro.Client
 }
 
-func NewCallHandler(localClient micro.LocalClient, dashboardClient micro.DashboardClient) CallHandler {
+func NewCallHandler(localClient micro.Client, dashboardClient micro.Client) CallHandler {
 	return CallHandler{localClient, dashboardClient}
 }
 
@@ -61,6 +62,13 @@ func (h CallHandler) Handle() http.HandlerFunc {
 			Time          string
 			Body          string
 		}{correlationId.String(), "", ""}
+
+		log.
+			With("environment", req.Environment).
+			With("service", req.Service).
+			With("endpoint", req.Endpoint).
+			With("correlationId", correlationId.String()).
+			Info("Sending RPC request")
 
 		if err := h.getClient(req.Environment).Call(
 			ctx,

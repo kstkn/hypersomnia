@@ -14,11 +14,11 @@ import (
 )
 
 type ServicesHandler struct {
-	localClient     micro.LocalClient
-	dashboardClient micro.DashboardClient
+	localClient     micro.Client
+	dashboardClient micro.Client
 }
 
-func NewServicesHandler(localClient micro.LocalClient, dashboardClient micro.DashboardClient) ServicesHandler {
+func NewServicesHandler(localClient micro.Client, dashboardClient micro.Client) ServicesHandler {
 	return ServicesHandler{localClient, dashboardClient}
 }
 
@@ -59,7 +59,7 @@ func (h ServicesHandler) Handle() http.HandlerFunc {
 					log.WithFields(log.Fields{
 						"environment": req.Environment,
 						"service":     service.Name,
-					}).Error(err)
+					}).Warn(err)
 					messages <- nil
 					return
 				}

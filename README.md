@@ -12,12 +12,12 @@ go get -u github.com/gietos/hypersomnia
 
 ## Usage
 
-Default registry is mdns. If you use it, you can simply start with:
+Default registry is consul on localhost:8500. If you use it, you can simply start with:
 ```
 hypersomnia
 ```
 
-To use consul registry:
+To use mdns registry:
 ```
 HYPERSOMNIA_REGISTRY=consul hypersomnia
 ```
@@ -47,7 +47,7 @@ To insert integer instead of string:
 
 ## Interact with services in the cloud
 
-This is possible if there's available instance of micro web dashboard. To configure, pass a map with 
+This is possible if there's available instance of micro web. To configure, pass a map with 
 environment name as a key and micro web dashboard url as value:
 
 ```

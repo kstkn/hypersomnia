@@ -1,14 +1,12 @@
 package main
 
 import (
-	"net/http"
-
-	"github.com/micro/go-micro/client"
-	log "github.com/sirupsen/logrus"
-
 	"github.com/gietos/hypersomnia/config"
 	"github.com/gietos/hypersomnia/handler"
 	"github.com/gietos/hypersomnia/micro"
+	"github.com/micro/go-micro/client"
+	log "github.com/sirupsen/logrus"
+	"net/http"
 )
 
 //go:generate go run templates.go
@@ -20,6 +18,7 @@ func init() {
 	conf = config.NewConfig()
 	log.WithFields(log.Fields{
 		"registry":          conf.Registry,
+		"registryAddress":   conf.RegistryAddress,
 		"environments":      conf.GetEnvironments(),
 		"rpcRequestTimeout": conf.GetRpcRequestTimeout(),
 	}).Debug("Configuration")
