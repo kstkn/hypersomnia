@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/prometheus/common/log"
 	"net/http"
 	"time"
@@ -22,11 +23,13 @@ func NewCallHandler(localClient micro.Client, dashboardClient micro.Client) Call
 	return CallHandler{localClient, dashboardClient}
 }
 
-func createContext(correlationId string) context.Context {
+func createContext(values map[string]string) context.Context {
 	ctx := context.Background()
 	md := metadata.Metadata{}
 	ctx = metadata.NewContext(ctx, md)
-	md["X-Correlation-Id"] = correlationId
+	for k, v := range values {
+		md[k] = v
+	}
 	return ctx
 }
 
@@ -44,6 +47,7 @@ func (h CallHandler) Handle() http.HandlerFunc {
 			Service     string
 			Endpoint    string
 			Body        map[string]interface{}
+			Context     map[string]string
 		}{}
 
 		decoder := json.NewDecoder(r.Body)
@@ -52,10 +56,15 @@ func (h CallHandler) Handle() http.HandlerFunc {
 			return
 		}
 
+		for k, v := range req.Context {
+			fmt.Println(k, v)
+		}
+
 		var serviceResponse json.RawMessage
 		start := time.Now()
 		correlationId, _ := uuid.NewRandom()
-		ctx := createContext(correlationId.String())
+		req.Context["X-Correllation-Id"] = correlationId
+		ctx := createContext(req.Context)
 
 		resp := struct {
 			CorrelationId string
