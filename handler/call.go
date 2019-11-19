@@ -63,7 +63,7 @@ func (h CallHandler) Handle() http.HandlerFunc {
 		var serviceResponse json.RawMessage
 		start := time.Now()
 		correlationId, _ := uuid.NewRandom()
-		req.Context["X-Correllation-Id"] = correlationId
+		req.Context["X-Correllation-Id"] = correlationId.String()
 		ctx := createContext(req.Context)
 
 		resp := struct {
