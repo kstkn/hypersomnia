@@ -15,12 +15,12 @@ import (
 )
 
 type CallHandler struct {
-	localClient     micro.Client
-	dashboardClient micro.Client
+	localClient micro.Client
+	webClient   micro.Client
 }
 
-func NewCallHandler(localClient micro.Client, dashboardClient micro.Client) CallHandler {
-	return CallHandler{localClient, dashboardClient}
+func NewCallHandler(localClient micro.Client, webClient micro.Client) CallHandler {
+	return CallHandler{localClient, webClient}
 }
 
 func createContext(values map[string]string) context.Context {
@@ -37,7 +37,7 @@ func (h CallHandler) getClient(env string) micro.Client {
 	if env == micro.EnvLocal {
 		return h.localClient
 	}
-	return h.dashboardClient
+	return h.webClient
 }
 
 func (h CallHandler) Handle() http.HandlerFunc {

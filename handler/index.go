@@ -9,14 +9,14 @@ import (
 )
 
 type IndexHandler struct {
-	tmpl            *template.Template
-	localClient     micro.Client
-	dashboardClient micro.Client
+	tmpl        *template.Template
+	localClient micro.Client
+	webClient   micro.Client
 }
 
-func NewIndexHandler(localClient micro.Client, dashboardClient micro.Client) IndexHandler {
+func NewIndexHandler(localClient micro.Client, webClient micro.Client) IndexHandler {
 	tmpl := template.Must(template.New("index").Parse(templates.Index))
-	return IndexHandler{tmpl, localClient, dashboardClient}
+	return IndexHandler{tmpl, localClient, webClient}
 }
 
 func (h IndexHandler) Handle() http.HandlerFunc {
@@ -25,7 +25,7 @@ func (h IndexHandler) Handle() http.HandlerFunc {
 			Envs        []string
 			JsTemplates template.HTML
 		}{
-			append(h.localClient.ListEnvs(), h.dashboardClient.ListEnvs()...),
+			append(h.localClient.ListEnvs(), h.webClient.ListEnvs()...),
 			templates.JsTemplates,
 		}); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

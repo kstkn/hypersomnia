@@ -28,12 +28,12 @@ func init() {
 		conf.GetRegistry(),
 		conf.GetRpcRequestTimeout(),
 	)
-	dashboardClient := micro.NewDashboardClient(conf.GetEnvironments())
+	webClient := micro.NewWebClient(conf.GetEnvironments())
 
-	http.HandleFunc("/", handler.NewIndexHandler(localClient, dashboardClient).Handle())
-	http.HandleFunc("/service", handler.NewServiceHandler(localClient, dashboardClient).Handle())
-	http.HandleFunc("/services", handler.NewServicesHandler(localClient, dashboardClient).Handle())
-	http.HandleFunc("/call", handler.NewCallHandler(localClient, dashboardClient).Handle())
+	http.HandleFunc("/", handler.NewIndexHandler(localClient, webClient).Handle())
+	http.HandleFunc("/service", handler.NewServiceHandler(localClient, webClient).Handle())
+	http.HandleFunc("/services", handler.NewServicesHandler(localClient, webClient).Handle())
+	http.HandleFunc("/call", handler.NewCallHandler(localClient, webClient).Handle())
 }
 
 func main() {

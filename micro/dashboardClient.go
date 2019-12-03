@@ -12,19 +12,19 @@ import (
 	"github.com/micro/go-micro/registry"
 )
 
-type DashboardClient struct {
+type WebClient struct {
 	httpClient http.Client
 	envs       map[string]string
 }
 
-func NewDashboardClient(envs map[string]string) DashboardClient {
-	return DashboardClient{
+func NewWebClient(envs map[string]string) WebClient {
+	return WebClient{
 		http.Client{},
 		envs,
 	}
 }
 
-func (c DashboardClient) ListEnvs() []string {
+func (c WebClient) ListEnvs() []string {
 	v := make([]string, 0, len(c.envs))
 	for name := range c.envs {
 		v = append(v, name)
@@ -32,7 +32,7 @@ func (c DashboardClient) ListEnvs() []string {
 	return v
 }
 
-func (c DashboardClient) ListServices(env string) ([]*registry.Service, error) {
+func (c WebClient) ListServices(env string) ([]*registry.Service, error) {
 	u, _ := url.Parse(c.envs[env] + "/registry")
 	req, err := http.NewRequest(http.MethodGet, u.String(), bytes.NewBuffer(nil))
 	if err != nil {
@@ -58,7 +58,7 @@ func (c DashboardClient) ListServices(env string) ([]*registry.Service, error) {
 	return services.Services, nil
 }
 
-func (c DashboardClient) GetService(env, name string) (*registry.Service, error) {
+func (c WebClient) GetService(env, name string) (*registry.Service, error) {
 	u, _ := url.Parse(c.envs[env] + "/registry")
 	q := u.Query()
 	q.Set("service", name)
@@ -96,7 +96,7 @@ func enrichFromContext(ctx context.Context, r *http.Request) {
 	}
 }
 
-func (c DashboardClient) Call(ctx context.Context, env, service, endpoint string, body map[string]interface{}, response *json.RawMessage) error {
+func (c WebClient) Call(ctx context.Context, env, service, endpoint string, body map[string]interface{}, response *json.RawMessage) error {
 	u, _ := url.Parse(c.envs[env] + "/rpc")
 
 	payload := struct {

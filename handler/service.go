@@ -8,19 +8,19 @@ import (
 )
 
 type ServiceHandler struct {
-	localClient     micro.Client
-	dashboardClient micro.Client
+	localClient micro.Client
+	webClient   micro.Client
 }
 
-func NewServiceHandler(localClient micro.Client, dashboardClient micro.Client) ServiceHandler {
-	return ServiceHandler{localClient, dashboardClient}
+func NewServiceHandler(localClient micro.Client, webClient micro.Client) ServiceHandler {
+	return ServiceHandler{localClient, webClient}
 }
 
 func (h ServiceHandler) getClient(env string) micro.Client {
 	if env == micro.EnvLocal {
 		return h.localClient
 	}
-	return h.dashboardClient
+	return h.webClient
 }
 
 func (h ServiceHandler) Handle() http.HandlerFunc {

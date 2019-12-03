@@ -48,7 +48,7 @@ To insert integer instead of string:
 ## Interact with services in the cloud
 
 This is possible if there's available instance of micro web. To configure, pass a map with 
-environment name as a key and micro web dashboard url as value:
+environment name as a key and micro web url as value:
 
 ```
 HYPERSOMNIA_ENVIRONMENTS="dev:https://web-dev.example.com;stage:https://web-stage.example.com" hypersomnia 

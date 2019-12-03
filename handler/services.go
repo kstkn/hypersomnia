@@ -14,19 +14,19 @@ import (
 )
 
 type ServicesHandler struct {
-	localClient     micro.Client
-	dashboardClient micro.Client
+	localClient micro.Client
+	webClient   micro.Client
 }
 
-func NewServicesHandler(localClient micro.Client, dashboardClient micro.Client) ServicesHandler {
-	return ServicesHandler{localClient, dashboardClient}
+func NewServicesHandler(localClient micro.Client, webClient micro.Client) ServicesHandler {
+	return ServicesHandler{localClient, webClient}
 }
 
 func (h ServicesHandler) getClient(env string) micro.Client {
 	if env == micro.EnvLocal {
 		return h.localClient
 	}
-	return h.dashboardClient
+	return h.webClient
 }
 
 func (h ServicesHandler) Handle() http.HandlerFunc {
