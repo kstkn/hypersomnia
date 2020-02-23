@@ -4,17 +4,17 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/gietos/hypersomnia/micro"
-	"github.com/gietos/hypersomnia/templates"
+	"github.com/kstkn/hypersomnia/micro"
+	"github.com/kstkn/hypersomnia/templates"
 )
 
 type IndexHandler struct {
 	tmpl        *template.Template
-	localClient micro.Client
-	webClient   micro.Client
+	localClient micro.ClientWrapper
+	webClient   micro.ClientWrapper
 }
 
-func NewIndexHandler(localClient micro.Client, webClient micro.Client) IndexHandler {
+func NewIndexHandler(localClient micro.ClientWrapper, webClient micro.ClientWrapper) IndexHandler {
 	tmpl := template.Must(template.New("index").Parse(templates.Index))
 	return IndexHandler{tmpl, localClient, webClient}
 }

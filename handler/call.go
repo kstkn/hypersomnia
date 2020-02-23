@@ -11,15 +11,15 @@ import (
 	"github.com/google/uuid"
 	"github.com/micro/go-micro/metadata"
 
-	"github.com/gietos/hypersomnia/micro"
+	"github.com/kstkn/hypersomnia/micro"
 )
 
 type CallHandler struct {
-	localClient micro.Client
-	webClient   micro.Client
+	localClient micro.ClientWrapper
+	webClient   micro.ClientWrapper
 }
 
-func NewCallHandler(localClient micro.Client, webClient micro.Client) CallHandler {
+func NewCallHandler(localClient micro.ClientWrapper, webClient micro.ClientWrapper) CallHandler {
 	return CallHandler{localClient, webClient}
 }
 
@@ -33,7 +33,7 @@ func createContext(values map[string]string) context.Context {
 	return ctx
 }
 
-func (h CallHandler) getClient(env string) micro.Client {
+func (h CallHandler) getClient(env string) micro.ClientWrapper {
 	if env == micro.EnvLocal {
 		return h.localClient
 	}
@@ -77,7 +77,7 @@ func (h CallHandler) Handle() http.HandlerFunc {
 			With("service", req.Service).
 			With("endpoint", req.Endpoint).
 			With("correlationId", correlationId.String()).
-			Info("Sending RPC request")
+			Info("sending RPC request")
 
 		if err := h.getClient(req.Environment).Call(
 			ctx,

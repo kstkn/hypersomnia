@@ -1,22 +1,22 @@
 package config
 
 import (
-	"regexp"
-	"strings"
 	"time"
 
-	"github.com/kelseyhightower/envconfig"
+	"github.com/kstkn/envconfig"
 	"github.com/micro/go-micro/registry"
 	"github.com/micro/go-micro/registry/consul"
 	"github.com/micro/go-micro/registry/mdns"
+	log "github.com/sirupsen/logrus"
 )
 
 type Config struct {
-	Addr              string `default:"localhost:8083"`
-	Registry          string `default:"consul"`
-	RegistryAddress   string `split_words:"true" default:"localhost:8500"`
-	RpcRequestTimeout string `default:"1m"`
-	Environments      string
+	LogLevel          log.Level     `default:"info" split_words:"true"`
+	Addr              string        `default:"localhost:8083"`
+	Registry          string        `default:"consul"`
+	RegistryAddr      string        `default:"localhost:8500" split_words:"true"`
+	RpcRequestTimeout time.Duration `default:"1m" split_words:"true" `
+	Environments      map[string]string
 }
 
 func NewConfig() Config {
@@ -27,35 +27,9 @@ func NewConfig() Config {
 	return c
 }
 
-func (c Config) GetAddr() string {
-	return c.Addr
-}
-
-// Parses micro web environment urls into map.
-func (c Config) GetEnvironments() map[string]string {
-	if c.Environments == "" {
-		return map[string]string{}
-	}
-	envs := strings.Split(c.Environments, ";")
-	r := regexp.MustCompile(`(?P<Name>[a-z]+?):(?P<Url>.+)`)
-	m := map[string]string{}
-	for _, env := range envs {
-		m[r.FindStringSubmatch(env)[1]] = r.FindStringSubmatch(env)[2]
-	}
-	return m
-}
-
-func (c Config) GetRpcRequestTimeout() time.Duration {
-	t, err := time.ParseDuration(c.RpcRequestTimeout)
-	if err != nil {
-		panic(err.Error())
-	}
-	return t
-}
-
 func (c Config) GetRegistry() registry.Registry {
 	if c.Registry == "consul" {
-		return consul.NewRegistry()
+		return consul.NewRegistry(registry.Addrs(c.RegistryAddr))
 	}
 	return mdns.NewRegistry()
 }

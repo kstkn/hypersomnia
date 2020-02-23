@@ -6,13 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetEnvironments(t *testing.T) {
-	c := Config{
-		Environments: "dev:http://dev.example.com;stage:http://stage.example.com",
-	}
-	assert.Equal(t, map[string]string{"dev": "http://dev.example.com", "stage": "http://stage.example.com"}, c.GetEnvironments())
-}
-
 var registryTestData = []struct {
 	in  string
 	out string

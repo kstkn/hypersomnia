@@ -8,21 +8,21 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/gietos/hypersomnia/micro"
+	"github.com/kstkn/hypersomnia/micro"
 
 	"github.com/micro/go-micro/registry"
 )
 
 type ServicesHandler struct {
-	localClient micro.Client
-	webClient   micro.Client
+	localClient micro.ClientWrapper
+	webClient   micro.ClientWrapper
 }
 
-func NewServicesHandler(localClient micro.Client, webClient micro.Client) ServicesHandler {
+func NewServicesHandler(localClient micro.ClientWrapper, webClient micro.ClientWrapper) ServicesHandler {
 	return ServicesHandler{localClient, webClient}
 }
 
-func (h ServicesHandler) getClient(env string) micro.Client {
+func (h ServicesHandler) getClient(env string) micro.ClientWrapper {
 	if env == micro.EnvLocal {
 		return h.localClient
 	}

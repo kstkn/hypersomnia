@@ -4,19 +4,19 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/gietos/hypersomnia/micro"
+	"github.com/kstkn/hypersomnia/micro"
 )
 
 type ServiceHandler struct {
-	localClient micro.Client
-	webClient   micro.Client
+	localClient micro.ClientWrapper
+	webClient   micro.ClientWrapper
 }
 
-func NewServiceHandler(localClient micro.Client, webClient micro.Client) ServiceHandler {
+func NewServiceHandler(localClient micro.ClientWrapper, webClient micro.ClientWrapper) ServiceHandler {
 	return ServiceHandler{localClient, webClient}
 }
 
-func (h ServiceHandler) getClient(env string) micro.Client {
+func (h ServiceHandler) getClient(env string) micro.ClientWrapper {
 	if env == micro.EnvLocal {
 		return h.localClient
 	}

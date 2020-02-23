@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/gietos/hypersomnia/config"
-	"github.com/gietos/hypersomnia/handler"
-	"github.com/gietos/hypersomnia/micro"
+	"github.com/kstkn/hypersomnia/config"
+	"github.com/kstkn/hypersomnia/handler"
+	"github.com/kstkn/hypersomnia/micro"
 	"github.com/micro/go-micro/client"
 	log "github.com/sirupsen/logrus"
 	"net/http"
@@ -14,21 +14,17 @@ import (
 var conf config.Config
 
 func init() {
-	log.SetLevel(log.DebugLevel)
 	conf = config.NewConfig()
-	log.WithFields(log.Fields{
-		"registry":          conf.Registry,
-		"registryAddress":   conf.RegistryAddress,
-		"environments":      conf.GetEnvironments(),
-		"rpcRequestTimeout": conf.GetRpcRequestTimeout(),
-	}).Debug("Configuration")
+
+	log.SetLevel(conf.LogLevel)
+	log.Debugf("configuration %+v", conf)
 
 	localClient := micro.NewLocalClient(
 		client.NewClient(client.Registry(conf.GetRegistry())),
 		conf.GetRegistry(),
-		conf.GetRpcRequestTimeout(),
+		conf.RpcRequestTimeout,
 	)
-	webClient := micro.NewWebClient(conf.GetEnvironments())
+	webClient := micro.NewMultiWebClient(conf.Environments)
 
 	http.HandleFunc("/", handler.NewIndexHandler(localClient, webClient).Handle())
 	http.HandleFunc("/service", handler.NewServiceHandler(localClient, webClient).Handle())
@@ -37,9 +33,9 @@ func init() {
 }
 
 func main() {
-	log.Info("Starting web server on " + conf.GetAddr())
+	log.Info("starting web server on " + conf.Addr)
 	s := &http.Server{
-		Addr: conf.GetAddr(),
+		Addr: conf.Addr,
 	}
 	log.Fatal(s.ListenAndServe())
 }

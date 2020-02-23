@@ -7,7 +7,7 @@ Created as a user-friendly replacement of [micro web](https://github.com/micro/m
 
 ## Install
 ```
-go get -u github.com/gietos/hypersomnia
+go get -u github.com/kstkn/hypersomnia
 ```
 
 ## Usage
