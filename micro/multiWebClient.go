@@ -17,7 +17,7 @@ func NewMultiWebClient(envs map[string]string) MultiWebClient {
 		httpClient: http.Client{},
 	}
 	for env, uri := range envs {
-		c.webClients[env] = NewClient(uri)
+		c.webClients[env] = NewWebClient(uri)
 	}
 	return c
 }

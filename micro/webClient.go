@@ -19,7 +19,7 @@ type WebClient struct {
 	baseUri    string
 }
 
-func NewClient(baseUri string) WebClient {
+func NewWebClient(baseUri string) WebClient {
 	return WebClient{
 		client.DefaultClient,
 		http.Client{},

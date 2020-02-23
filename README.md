@@ -58,6 +58,14 @@ You will see configured environments in environment switcher:
 
 ![](https://i.imgur.com/642Ycdq.png)
 
+## Use as micro client
+
+```go
+import microWebClient "github.com/kstkn/hypersomnia/micro"
+
+microWebClient.NewWebClient("https://web-dev.example.com")
+```
+
 ## Quick access to external system to search by correlation id
 
 For each environment you can set up an URL template to open quickly by pressing correlation id badge.
