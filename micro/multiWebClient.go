@@ -3,8 +3,9 @@ package micro
 import (
 	"context"
 	"encoding/json"
-	"github.com/micro/go-micro/registry"
 	"net/http"
+
+	"github.com/micro/go-micro/registry"
 )
 
 type MultiWebClient struct {
