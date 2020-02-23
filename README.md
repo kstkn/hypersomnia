@@ -51,7 +51,7 @@ This is possible if there's available instance of micro web. To configure, pass 
 environment name as a key and micro web url as value:
 
 ```
-HYPERSOMNIA_ENVIRONMENTS="dev:https://web-dev.example.com;stage:https://web-stage.example.com" hypersomnia 
+HYPERSOMNIA_ENVIRONMENTS="dev:https://web-dev.example.com,stage:https://web-stage.example.com" hypersomnia 
 ```
 
 You will see configured environments in environment switcher:
