@@ -15,7 +15,8 @@ type MultiWebClient struct {
 
 func NewMultiWebClient(envs map[string]string) MultiWebClient {
 	c := MultiWebClient{
-		httpClient: http.Client{},
+		http.Client{},
+		map[string]WebClient{},
 	}
 	for env, uri := range envs {
 		c.webClients[env] = NewWebClient(uri)
