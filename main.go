@@ -26,10 +26,10 @@ func init() {
 	)
 	webClient := micro.NewMultiWebClient(conf.Environments)
 
-	http.HandleFunc("/", handler.NewIndexHandler(localClient, webClient).Handle())
-	http.HandleFunc("/service", handler.NewServiceHandler(localClient, webClient).Handle())
-	http.HandleFunc("/services", handler.NewServicesHandler(localClient, webClient).Handle())
-	http.HandleFunc("/call", handler.NewCallHandler(localClient, webClient).Handle())
+	http.Handle("/", handler.NewIndexHandler(localClient, webClient))
+	http.Handle("/service", handler.NewServiceHandler(localClient, webClient))
+	http.Handle("/services", handler.NewServicesHandler(localClient, webClient))
+	http.Handle("/call", handler.NewCallHandler(localClient, webClient))
 }
 
 func main() {

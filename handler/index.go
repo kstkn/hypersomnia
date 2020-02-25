@@ -19,16 +19,14 @@ func NewIndexHandler(localClient micro.ClientWrapper, webClient micro.ClientWrap
 	return IndexHandler{tmpl, localClient, webClient}
 }
 
-func (h IndexHandler) Handle() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if err := h.tmpl.Execute(w, struct {
-			Envs        []string
-			JsTemplates template.HTML
-		}{
-			append(h.localClient.ListEnvs(), h.webClient.ListEnvs()...),
-			templates.JsTemplates,
-		}); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+func (h IndexHandler) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
+	if err := h.tmpl.Execute(w, struct {
+		Envs        []string
+		JsTemplates template.HTML
+	}{
+		append(h.localClient.ListEnvs(), h.webClient.ListEnvs()...),
+		templates.JsTemplates,
+	}); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
