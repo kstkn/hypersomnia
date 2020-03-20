@@ -235,6 +235,21 @@
         return this;
     };
 
+    String.prototype.splitN = function(separator, limit) {
+        let str = this;
+        str = str.split(separator);
+
+        if(str.length > limit) {
+            let ret = str.splice(0, limit);
+            ret.push(str.join(separator));
+
+            return ret;
+        }
+
+        return str;
+    };
+
+
     let copyToClipboard = function(data) {
         var tempInput = document.createElement('INPUT');
         let body = $('body')[0];
@@ -595,7 +610,7 @@
 					if (typeof lines[i] !== 'string') {
 						continue;
 					}
-					pair = lines[i].split(':');
+					pair = lines[i].splitN(':', 1);
 					values[pair[0].trim()] = pair[1].trim();
 				}
 				
