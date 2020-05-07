@@ -722,9 +722,6 @@
             container.html('');
             $('.js-environment option').each(function () {
                 let environment = $(this).val();
-                if (environment === 'local') {
-                    return
-                }
                 container.append(Mustache.render(tmplEnvironmentLogsUrl, {
                     environment: environment,
                     url: storage.getItem('logs:' + environment),
