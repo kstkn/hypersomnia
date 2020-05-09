@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/prometheus/common/log"
 	"net/http"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/micro/go-micro/metadata"
+	"github.com/prometheus/common/log"
 
 	"github.com/kstkn/hypersomnia/micro"
 )

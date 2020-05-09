@@ -64,19 +64,19 @@
             height: 70%;
         }
 
-		#request-context-editor {
-			height: 15%;
-		}
+        #request-context-editor {
+            height: 15%;
+        }
 
-		#request-context-editor textarea {
-			width: 100%;
-			height: 100%;
+        #request-context-editor textarea {
+            width: 100%;
+            height: 100%;
             font: 10px 'Roboto-Mono',Monaco,Menlo,'Ubuntu Mono',Consolas,monospace !important;
-		}
+        }
 
-		#response-editor {
-			height: 90%;
-		}
+        #response-editor {
+            height: 90%;
+        }
 
         .clickable {
             cursor: pointer;
@@ -144,8 +144,8 @@
                 <button class="btn btn-sm btn-secondary js-reset float-right mr-2">Reset</button>
             </div>
             <div id="request-body-editor"></div>
-			<span class="text-muted">Context (one per line, <code>:</code> - delimited)</span>
-			<div id="request-context-editor"><textarea></textarea></div>
+            <span class="text-muted">Context (one per line, <code>:</code> - delimited)</span>
+            <div id="request-context-editor"><textarea></textarea></div>
         </div>
         <div class="col-sm" id="response">
             <div class="mb-2 mt-3 clearfix">
@@ -561,7 +561,7 @@
                 alert('Request: ' + e.message);
                 sendBtn.prop('disabled', false);
             }
-			let contextEditor = $('#request-context-editor textarea');
+            let contextEditor = $('#request-context-editor textarea');
 
             responseEditor.set('loading...');
             $('.js-response-time').text('...');
@@ -602,24 +602,24 @@
 
             Promise.all(promises).then(function() {
                 body = JSON.parse(bodyText);
-				lines = contextEditor.val().split('\n').filter(function(v) {
-					return v != '';
-				});
-				let values = {};
-				for(i in lines) {
-					if (typeof lines[i] !== 'string') {
-						continue;
-					}
-					pair = lines[i].splitN(':', 1);
-					values[pair[0].trim()] = pair[1].trim();
-				}
-				
+                lines = contextEditor.val().split('\n').filter(function(v) {
+                    return v != '';
+                });
+                let values = {};
+                for(i in lines) {
+                    if (typeof lines[i] !== 'string') {
+                        continue;
+                    }
+                    pair = lines[i].splitN(':', 1);
+                    values[pair[0].trim()] = pair[1].trim();
+                }
+                
                 console.info('Request: ' + request + 
-					'\nEnvironment: ' + environment + 
-					'\nService: ' + service + 
-					'\nEndpoint: ' + endpoint + 
-					'\nBody: ' + JSON.stringify(body) +
-					'\nContext: ' + JSON.stringify(values));
+                    '\nEnvironment: ' + environment + 
+                    '\nService: ' + service + 
+                    '\nEndpoint: ' + endpoint + 
+                    '\nBody: ' + JSON.stringify(body) +
+                    '\nContext: ' + JSON.stringify(values));
 
                 class Response {
                     Body;
@@ -637,7 +637,7 @@
                         service: service,
                         endpoint: endpoint,
                         body: body,
-						context: values,
+                        context: values,
                     }),
                     success: /** @param {Response} response */ function (response) {
                         let body;

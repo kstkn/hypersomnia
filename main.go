@@ -1,12 +1,14 @@
 package main
 
 import (
+	"net/http"
+
+	"github.com/micro/go-micro/client"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/kstkn/hypersomnia/config"
 	"github.com/kstkn/hypersomnia/handler"
 	"github.com/kstkn/hypersomnia/micro"
-	"github.com/micro/go-micro/client"
-	log "github.com/sirupsen/logrus"
-	"net/http"
 )
 
 //go:generate go run templates.go

@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/micro/go-micro/registry"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 
 	"github.com/micro/go-micro/client"
 	"github.com/micro/go-micro/metadata"
+	"github.com/micro/go-micro/registry"
 )
 
 type WebClient struct {
