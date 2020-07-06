@@ -309,6 +309,7 @@
         responses: '[service+request],time,receivedAt,body,correlationId',
     });
 
+    let activeEnvironment = storage.getItem('active-environment');
     let activeRequest = storage.getItem('active-request');
     let favorites = storage.getItem('favorites');
     if (favorites) {
@@ -329,6 +330,7 @@
 
         let environmentSwitcher = $('.js-environment');
         environmentSwitcher.on('change', function () {
+            let environment = $(this).val();
             $(this).prop('disabled', true);
             $.ajax({
                 method: 'POST',
@@ -336,9 +338,10 @@
                 dataType: 'json',
                 contentType: 'application/json',
                 data: JSON.stringify({
-                    environment: $(this).val(),
+                    environment: environment,
                 }),
                 success: function (responseServices) {
+                    localStorage.setItem('active-environment', environment);
                     let services = $('.js-services');
                     services.text('');
                     // Favorites
@@ -389,7 +392,6 @@
                 }
             });
         });
-        environmentSwitcher.trigger('change');
 
         $(document)
             .on('show.bs.collapse', '.collapse', function () {
@@ -653,6 +655,9 @@
                         $('.js-correlation-id').text(response.CorrelationId);
                         responseEditor.set(body);
 
+                        if (response.Body.length > 1000000) {
+                            body = "truncated because of size...";
+                        }
                         db.responses.put({
                             service: service,
                             request: request,
@@ -829,6 +834,12 @@
                 console.log(error);
             });
         });
+
+        if (activeEnvironment) {
+            $('#environmentSwitcher')
+                .val(activeEnvironment)
+                .trigger('change');
+        }
 
         if (activeRequest) {
             $('.js-request[data-name="' + activeRequest + '"]').trigger('click');
