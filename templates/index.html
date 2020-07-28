@@ -9,9 +9,11 @@
     <link rel="stylesheet" href="https://unpkg.com/jsoneditor@6.1.0/dist/jsoneditor.min.css">
     <title>Hypersomnia</title>
     <style>
-        body, html {
+        body, html, textarea {
             margin: 0;
-            height:100%;
+            height: 100%;
+            background-color: #2c2d2a;
+            color: #939393;
         }
 
         body{
@@ -26,7 +28,7 @@
             width: 1em;
             height: 1em;
             vertical-align: -.125em;
-            fill: #212529;
+            fill: #939393;
         }
 
         .icon-danger {
@@ -45,19 +47,63 @@
         }
 
         div.active {
-            background-color: #444444;
-            color: #ffffff;
+            background-color: #3a3a37;
+            color: #dfdfdf;
             -webkit-border-radius: 3px;
             -moz-border-radius: 3px;
             border-radius: 3px;
         }
 
         div.active .icon {
-            fill: #ffffff;
+            fill: #dfdfdf;
         }
 
         .ace_editor {
-            font: 10px 'Roboto-Mono',Monaco,Menlo,'Ubuntu Mono',Consolas,monospace !important;
+            font: 12px monospace !important;
+        }
+        .ace-jsoneditor .ace_cursor {
+            border-left: 2px solid #939393 !important;
+        }
+        .ace-jsoneditor .ace_gutter {
+            background: #2c2d2a !important;
+            color: #939393 !important;
+        }
+        .ace-jsoneditor .ace_gutter-active-line {
+            background: #3a3a37 !important;
+        }
+        .ace-jsoneditor .ace_marker-layer .ace_active-line {
+            background: #3a3a37 !important;
+        }
+        .ace-jsoneditor .ace_scroller {
+            background: #2c2d2a !important;
+            color: #939393 !important;
+        }
+        .ace-jsoneditor .ace_variable {
+            color: #AE8ABE !important;
+        }
+        .ace-jsoneditor .ace_numeric {
+            color: #6897BB !important;
+        }
+        .ace-jsoneditor .ace_string {
+            color: #6A8759 !important;
+        }
+        .ace-dracula .ace_fold {
+            background-color: #3a3a3a !important;
+            border-color: #373737 !important;
+        }
+        .ace-jsoneditor .ace_indent-guide {
+            background: none !important;
+        }
+        .ace-jsoneditor .ace_keyword,
+        .ace-jsoneditor .ace_meta,
+        .ace-jsoneditor .ace_support.ace_constant.ace_property-value {
+            color: #CC7832 !important;
+        }
+        .ace-jsoneditor .ace_marker-layer .ace_selection {
+            background: #214283 !important;
+        }
+        div.jsoneditor {
+            border: none;
         }
 
         #request-body-editor {
@@ -71,7 +117,13 @@
         #request-context-editor textarea {
             width: 100%;
             height: 100%;
-            font: 10px 'Roboto-Mono',Monaco,Menlo,'Ubuntu Mono',Consolas,monospace !important;
+            font: 12px monospace;
+            border: none;
+        }
+
+        #request-context-editor textarea:focus {
+            border: none !important;
+            outline: none !important;
         }
 
         #response-editor {
@@ -80,6 +132,19 @@
 
         .clickable {
             cursor: pointer;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            border-radius: 2px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #3a3a37;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #939393;
         }
     </style>
 </head>
@@ -121,39 +186,37 @@
     </symbol>
 </svg>
 
-<div class="container-fluid p-2 pl-4">
+<div class="container-fluid">
     <div class="row parent">
-        <div class="col-sm" id="services" style="overflow-y: hidden;">
+        <div class="col-sm" id="services" style="overflow-y: hidden;padding-left:0;padding-right:0">
             {{ $length := len .Envs }}
-            <div {{if le $length 1}} style="display: none;"{{end}}>
+            <div class="pl-3 pt-2" style="{{if le $length 1}}display: none;{{end}}border-right:1px solid #4a4a48">
                 <label for="environmentSwitcher">Environment:</label> <select id="environmentSwitcher" class="js-environment">
                     {{range .Envs}}<option value="{{.}}">{{.}}</option>{{end}}
                 </select> <svg class="icon clickable js-environment-settings ml-1"><use href="#cog"></use></svg>
             </div>
-            <div class="mt-1 mb-1">
-                Services:
-            </div>
-            <div class="js-services" style="overflow-y: auto; height: 90%;">
+            <div class="js-services pt-1 pl-3" style="overflow-y: auto; height: 90%;border-top:1px solid #4a4a48;border-right:1px solid #4a4a48">
 
             </div>
         </div>
-        <div class="col-sm" id="request">
-            <div class="mb-2 clearfix">
+        <div class="col-sm" id="request" style="padding-left:0;padding-right:0">
+            <div class="mb-1 mt-1 pl-3 clearfix">
                 <div class="js-active-endpoint float-left pt-1 pb-1"><span class="text-muted">Select endpoint on the left</span></div>
-                <button class="btn btn-sm btn-primary js-send float-right">Send</button>
+                <button class="btn btn-sm btn-primary js-send float-right mr-2">Send</button>
                 <button class="btn btn-sm btn-secondary js-reset float-right mr-2">Reset</button>
             </div>
-            <div id="request-body-editor"></div>
-            <span class="text-muted">Context (one per line, <code>:</code> - delimited)</span>
-            <div id="request-context-editor"><textarea></textarea></div>
+            <div id="request-body-editor" style="border-top:1px solid #4a4a48;border-bottom:1px solid #4a4a48"></div>
+            <div class="text-muted p-3">Context (one per line, <code>:</code> - delimited)</div>
+            <div id="request-context-editor"><textarea class="pl-3 pr-3"></textarea></div>
         </div>
-        <div class="col-sm" id="response">
-            <div class="mb-2 mt-3 clearfix">
-                <span class="badge badge-secondary js-response-time float-right">...</span>
-                <span class="badge badge-secondary js-response-took float-right mr-2">...</span>
-                <span class="badge badge-secondary js-correlation-id float-right mr-2" style="cursor: pointer;">...</span>
+        <div class="col-sm" id="response" style="padding-left:0;border-left:1px solid #4a4a48">
+            <div class="mb-1 mt-1 pl-3 clearfix">
+                <div class="float-left pt-1 pb-1"><span class="text-muted">Response</span></div>
+                <span class="badge badge-secondary js-response-time float-right mt-2">...</span>
+                <span class="badge badge-secondary js-response-took float-right mt-2 mr-2">...</span>
+                <span class="badge badge-secondary js-correlation-id float-right mt-2 mr-2" style="cursor: pointer;">...</span>
             </div>
-            <div id="response-editor"></div>
+            <div id="response-editor" style="border-top:1px solid #4a4a48"></div>
         </div>
     </div>
 </div>
@@ -323,9 +386,13 @@
             enableSort: false,
             enableTransform: false,
             mode: 'code',
+            statusBar: false,
+            mainMenuBar: false,
         });
         let responseEditor = new JSONEditor(document.getElementById("response-editor"), {
             mode: 'code',
+            statusBar: false,
+            mainMenuBar: false,
         });
 
         let environmentSwitcher = $('.js-environment');
