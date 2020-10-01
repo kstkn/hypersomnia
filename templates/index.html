@@ -906,6 +906,8 @@
             $('#environmentSwitcher')
                 .val(activeEnvironment)
                 .trigger('change');
+        } else {
+            $('#environmentSwitcher').val('local').trigger('change');
         }
 
         if (activeRequest) {
