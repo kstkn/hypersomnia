@@ -281,6 +281,8 @@
     let tmplService = $('#tmplService').html();
     let tmplRequest = $('#tmplRequest').html();
     let tmplEnvironmentLogsUrl = $('#tmplEnvironmentLogsUrl').html();
+    let environmentSwitcher = $('.js-environment');
+    let servicesContainer = $('.js-services');
 
     String.prototype.replaceAll = function(search, replacement) {
         let target = this;
@@ -311,7 +313,6 @@
 
         return str;
     };
-
 
     let copyToClipboard = function(data) {
         var tempInput = document.createElement('INPUT');
@@ -381,6 +382,73 @@
         favorites = [];
     }
 
+    function getServices(environment) {
+        environmentSwitcher.prop('disabled', true);
+
+        $.ajax({
+            method: 'POST',
+            url: 'services',
+            dataType: 'json',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                environment: environment,
+            }),
+            success: function (responseServices) {
+                localStorage.setItem('active-environment', environment);
+                servicesContainer.text('');
+                if (responseServices === null) {
+                    servicesContainer.text('No services found');
+                    return;
+                }
+
+                // Favorites
+                for (let i in responseServices) {
+                    let name = responseServices[i].name;
+                    if (favorites.indexOf(name) === -1) {
+                        continue;
+                    }
+                    let id = name.replace(/\./g, '_');
+                    servicesContainer.append(Mustache.render(tmplService, {id: id, name: name}));
+                }
+                for (let i in favorites) {
+                    $('.js-favorite[data-service="'+favorites[i]+'"]')
+                        .addClass('js-favorite-on')
+                        .find('use').attr('href', '#star-solid')
+                    ;
+                }
+
+                for (let i in responseServices) {
+                    let name = responseServices[i].name;
+                    if (name === '') {
+                        continue;
+                    }
+                    if (favorites.indexOf(name) !== -1) {
+                        continue;
+                    }
+                    let id = name.replace(/\./g, '_');
+                    servicesContainer.append(Mustache.render(tmplService, {id: id, name: name}));
+                }
+
+                $('.collapse')
+                    .each(function () {
+                        let id = $(this).attr('id');
+                        if (storage.getItem(id + ':show') === 'true') {
+                            $(this).collapse('show');
+                        } else {
+                            $(this).collapse('hide');
+                        }
+                    })
+                ;
+            },
+            error: function (jqXHR, _, errorThrown) {
+                alert(errorThrown + ': ' + jqXHR.responseText);
+            },
+            complete: function () {
+                environmentSwitcher.prop('disabled', false)
+            }
+        });
+    }
+
     $(function () {
         let requestBodyEditor = new JSONEditor(document.getElementById("request-body-editor"), {
             enableSort: false,
@@ -395,69 +463,9 @@
             mainMenuBar: false,
         });
 
-        let environmentSwitcher = $('.js-environment');
         environmentSwitcher.on('change', function () {
             let environment = $(this).val();
-            $(this).prop('disabled', true);
-            $.ajax({
-                method: 'POST',
-                url: 'services',
-                dataType: 'json',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    environment: environment,
-                }),
-                success: function (responseServices) {
-                    localStorage.setItem('active-environment', environment);
-                    let services = $('.js-services');
-                    services.text('');
-                    // Favorites
-                    for (let i in responseServices) {
-                        let name = responseServices[i].name;
-                        if (favorites.indexOf(name) === -1) {
-                            continue;
-                        }
-                        let id = name.replace(/\./g, '_');
-                        services.append(Mustache.render(tmplService, {id: id, name: name}));
-                    }
-
-                    for (let i in responseServices) {
-                        let name = responseServices[i].name;
-                        if (name === '') {
-                            continue;
-                        }
-                        if (favorites.indexOf(name) !== -1) {
-                            continue;
-                        }
-                        let id = name.replace(/\./g, '_');
-                        services.append(Mustache.render(tmplService, {id: id, name: name}));
-                    }
-
-                    for (let i in favorites) {
-                        $('.js-favorite[data-service="'+favorites[i]+'"]')
-                            .addClass('js-favorite-on')
-                            .find('use').attr('href', '#star-solid')
-                        ;
-                    }
-
-                    $('.collapse')
-                        .each(function () {
-                            let id = $(this).attr('id');
-                            if (storage.getItem(id + ':show') === 'true') {
-                                $(this).collapse('show');
-                            } else {
-                                $(this).collapse('hide');
-                            }
-                        })
-                    ;
-                },
-                error: function (jqXHR, _, errorThrown) {
-                    alert(errorThrown + ': ' + jqXHR.responseText);
-                },
-                complete: function () {
-                    $('.js-environment').prop('disabled', false)
-                }
-            });
+            getServices(environment);
         });
 
         $(document)
