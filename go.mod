@@ -1,6 +1,6 @@
 module github.com/kstkn/hypersomnia
 
-go 1.18
+go 1.17
 
 require (
 	github.com/google/uuid v1.1.1
