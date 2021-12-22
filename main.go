@@ -11,8 +11,6 @@ import (
 	"github.com/kstkn/hypersomnia/micro"
 )
 
-//go:generate go run templates.go
-
 var conf config.Config
 
 func init() {

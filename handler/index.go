@@ -25,7 +25,7 @@ func (h IndexHandler) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 		JsTemplates template.HTML
 	}{
 		append(h.localClient.ListEnvs(), h.webClient.ListEnvs()...),
-		templates.JsTemplates,
+		template.HTML(templates.JsTemplates),
 	}); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
